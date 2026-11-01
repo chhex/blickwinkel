@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, nuc]
+    runs-on: [self-hosted, chexs]
     env:
       # Liegt fest auf dem NUC, nicht im Repo und nicht bei GitHub
       ENV_FILE: /opt/blickwinkel/.env
