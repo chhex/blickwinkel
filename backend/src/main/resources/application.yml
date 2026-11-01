@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: blickwinkel
+  config:
+    import:
+      - classpath:sources.yml
+      # Lokal (mvn spring-boot:run im Projektordner): .env direkt einlesen.
+      # Im Container fehlt die Datei; dort kommen die Werte als Umgebungsvariablen.
+      - optional:file:../.env[.properties]
+  datasource:
+    # Ohne POSTGRES_* bricht der Start bewusst ab (strikt, kein Standardpasswort)
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${POSTGRES_DB}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+
+blickwinkel:
+  ingest:
+    interval: PT20M
+    timeout: PT20S
+    teaser-max-length: 1000
+    user-agent: "Blickwinkel/0.1 (private news comparison)"
+  embedding:
+    interval: PT1M
+    base-url: ${OLLAMA_URL:http://localhost:11434}
+    model: bge-m3
+    dimensions: 1024          # muss zu vector(1024) im Schema passen
+    batch-size: 32
+  clustering:
+    interval: PT1M
+    similarity-threshold: 0.70  # kalibriert am 31.10.2026 mit echten Daten
+    window: PT48H
+    batch-size: 200
+
+logging:
+  level:
+    ch.chhex.blickwinkel: INFO

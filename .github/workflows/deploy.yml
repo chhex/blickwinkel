@@ -1,0 +1,51 @@
+# Continuous Deployment auf den NUC über einen Self-hosted Runner.
+#
+# Sicherheit: Dieser Workflow läuft NUR bei Push auf main oder manuell.
+# Niemals pull_request / pull_request_target ergänzen, solange ein
+# Self-hosted Runner dranhängt: sonst läuft fremder Code auf dem NUC.
+
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Nie zwei Deployments gleichzeitig; ein laufendes wird nicht abgebrochen
+concurrency:
+  group: deploy-nuc
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, nuc]
+    env:
+      # Liegt fest auf dem NUC, nicht im Repo und nicht bei GitHub
+      ENV_FILE: /opt/blickwinkel/.env
+
+    steps:
+      - name: Code holen
+        uses: actions/checkout@v4
+
+      - name: Env-Datei prüfen
+        run: test -r "$ENV_FILE" || { echo "::error::$ENV_FILE fehlt oder ist nicht lesbar"; exit 1; }
+
+      - name: Bauen und starten
+        run: docker compose --env-file "$ENV_FILE" --profile app up -d --build --remove-orphans
+
+      - name: Warten bis die App antwortet
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS "http://localhost:8080/api/stories?hours=1" > /dev/null; then
+              echo "App läuft"
+              exit 0
+            fi
+            sleep 4
+          done
+          echo "::error::App antwortet nach 2 Minuten nicht"
+          docker compose --env-file "$ENV_FILE" --profile app logs --tail=80 app
+          exit 1
+
+      - name: Alte Images aufräumen
+        if: always()
+        run: docker image prune -f

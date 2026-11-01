@@ -1,0 +1,86 @@
+# Quellenkatalog. Wird beim Start in die Tabelle `source` synchronisiert:
+# neue Codes werden angelegt, bestehende aktualisiert, entfernte deaktiviert.
+#
+# section: NEWS oder OPINION  (Meinung bewusst als eigene "Quelle" führen)
+# camp:    dein eigenes Lager-Tag, frei wählbar, vorerst leer
+#
+# Status der Feed-URLs (geprüft am 2026-10-17):
+#   [ok]   Feed abgerufen und als RSS/Atom erkannt
+#   [?]    aus Verzeichnis/Doku übernommen, beim ersten Lauf im Log prüfen
+
+blickwinkel:
+  sources:
+    # --- Schweiz ---
+    - code: nzz
+      name: NZZ
+      country: CH
+      language: de
+      section: NEWS
+      feed-url: https://www.nzz.ch/recent.rss                # [?] laut Feed-Verzeichnis
+    - code: nzz-meinung
+      name: NZZ Meinung
+      country: CH
+      language: de
+      section: OPINION
+      feed-url: https://www.nzz.ch/meinung.rss               # [?]
+    - code: srf
+      name: SRF News
+      country: CH
+      language: de
+      section: NEWS
+      feed-url: https://www.srf.ch/news/bnf/rss/1646         # [ok]
+    - code: tagesanzeiger
+      name: Tages-Anzeiger
+      country: CH
+      language: de
+      section: NEWS
+      feed-url: https://partner-feeds.publishing.tamedia.ch/rss/tagesanzeiger/ticker  # [?]
+    - code: watson
+      name: watson
+      country: CH
+      language: de
+      section: NEWS
+      feed-url: https://www.watson.ch/api/2.0/rss/index.xml  # [ok] Atom
+    - code: infosperber
+      name: Infosperber
+      country: CH
+      language: de
+      section: NEWS
+      feed-url: https://www.infosperber.ch/feed/             # [ok]
+    - code: letemps
+      name: Le Temps
+      country: CH
+      language: fr
+      section: NEWS
+      feed-url: https://www.letemps.ch/articles.rss          # [?]
+    # Weltwoche, WOZ, Nebelspalter, Republik: Feed-URL noch offen, bitte ergänzen
+
+    # --- Deutschland ---
+    - code: spiegel
+      name: Der Spiegel
+      country: DE
+      language: de
+      section: NEWS
+      feed-url: https://www.spiegel.de/schlagzeilen/index.rss  # [?]
+
+    # --- Frankreich / Spanien ---
+    - code: lemonde
+      name: Le Monde
+      country: FR
+      language: fr
+      section: NEWS
+      feed-url: https://www.lemonde.fr/rss/une.xml           # [?]
+    - code: elpais
+      name: El País
+      country: ES
+      language: es
+      section: NEWS
+      feed-url: https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada  # [?]
+
+    # --- USA ---
+    - code: wsj-world
+      name: WSJ World
+      country: US
+      language: en
+      section: NEWS
+      feed-url: https://feeds.content.dowjones.io/public/rss/RSSWorldNews  # [ok]

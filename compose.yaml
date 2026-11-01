@@ -1,0 +1,63 @@
+# Fester Projektname: gleiche Container- und Volume-Namen auf Mac und NUC,
+# egal in welchem Ordner das Repo liegt.
+name: blickwinkel
+
+# Werte kommen aus .env (Vorlage: .env.example). Fehlt ein Wert, bricht Compose ab.
+x-db-env: &db-env
+  POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB fehlt, siehe .env.example}
+  POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER fehlt, siehe .env.example}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt, siehe .env.example}
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment: *db-env
+    ports:
+      - "127.0.0.1:5432:5432"     # nur vom Rechner selbst erreichbar, nicht aus dem LAN
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    ports:
+      - "127.0.0.1:11434:11434"
+    volumes:
+      - ollama-models:/root/.ollama
+    restart: unless-stopped
+
+  # Einmaliger Job: lädt das Embedding-Modell, sobald Ollama bereit ist
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    environment:
+      OLLAMA_HOST: ollama:11434
+    entrypoint: ["/bin/sh", "-c", "until ollama list >/dev/null 2>&1; do sleep 1; done; ollama pull bge-m3"]
+    restart: "no"
+
+  # Die App selbst. Nur mit Profil "app" (NUC), damit sie lokal nicht
+  # zusätzlich zu mvn spring-boot:run startet.
+  app:
+    profiles: ["app"]
+    build: ./backend
+    environment:
+      <<: *db-env
+      DB_HOST: db
+      OLLAMA_URL: http://ollama:11434
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      ollama-pull:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  ollama-models:

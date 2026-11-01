@@ -1,0 +1,9 @@
+target/
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Secrets: nur die Vorlage gehört ins Repo
+.env
+!.env.example
