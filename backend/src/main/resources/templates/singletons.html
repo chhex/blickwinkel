@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Einzelmeldungen')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('singletons')}"></nav>
+
+<main class="container">
+    <hgroup>
+        <h1>Einzelmeldungen</h1>
+        <p>Artikel, die keine andere Quelle aufgegriffen hat, mit der ähnlichsten fremden Story.</p>
+    </hgroup>
+
+    <p class="muted">
+        Schwellwert fürs Zuordnen: <strong th:text="${@fmt.sim(threshold)}">0.70</strong>.
+        <span class="near-sample">Markiert</span> sind Artikel knapp darunter: Häufen sich dort
+        Artikel, die eigentlich zur Story gehören, ist der Schwellwert zu streng.
+    </p>
+
+    <form class="filters" action="/einzelmeldungen" method="get"
+          hx-get="/einzelmeldungen" hx-target="#list" hx-swap="outerHTML"
+          hx-trigger="change" hx-push-url="true">
+        <label>Zeitraum
+            <select name="hours">
+                <option th:each="h : ${ {6, 24, 48, 168} }" th:value="${h}"
+                        th:text="${h == 168 ? '7 Tage' : h + ' Stunden'}"
+                        th:selected="${h == hours}">24 Stunden</option>
+            </select>
+        </label>
+        <label>Quelle
+            <select name="source">
+                <option value="">Alle</option>
+                <option th:each="o : ${sources}" th:value="${o.code}" th:text="${o.name}"
+                        th:selected="${o.code == source}">NZZ</option>
+            </select>
+        </label>
+    </form>
+
+    <section id="list" th:fragment="list">
+        <p th:if="${#lists.isEmpty(singletons)}" class="muted">Keine Einzelmeldungen in diesem Zeitraum.</p>
+        <div class="overflow-auto" th:unless="${#lists.isEmpty(singletons)}">
+            <table class="striped">
+                <thead>
+                <tr>
+                    <th>Zeit</th>
+                    <th>Quelle</th>
+                    <th>Schlagzeile</th>
+                    <th>Ähnlichste fremde Story</th>
+                    <th>Ähnl.</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${singletons}"
+                    th:classappend="${s.nearestSimilarity != null and s.nearestSimilarity >= threshold - 0.05} ? 'near'">
+                    <td><small th:text="${@fmt.time(s.articleTime)}">01.11. 16:33</small></td>
+                    <td th:text="${s.source}">NZZ</td>
+                    <td><a th:href="${s.url}" th:text="${s.title}" target="_blank" rel="noopener">Schlagzeile</a></td>
+                    <td>
+                        <a th:if="${s.nearestStoryId != null}"
+                           th:href="@{/stories/{id}(id=${s.nearestStoryId})}"
+                           th:text="${s.nearestTitle}">Story</a>
+                        <span th:if="${s.nearestStoryId == null}" class="muted">keine im Zeitfenster</span>
+                    </td>
+                    <td th:text="${@fmt.sim(s.nearestSimilarity)}">0.67</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

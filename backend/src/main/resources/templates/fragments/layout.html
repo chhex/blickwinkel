@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:fragment="head(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · Blickwinkel'">Blickwinkel</title>
+    <link rel="stylesheet" th:href="@{/vendor/pico-2.1.1.min.css}">
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script th:src="@{/vendor/htmx-2.0.11.min.js}" defer></script>
+</head>
+<body>
+
+<nav th:fragment="nav(active)" class="container">
+    <ul>
+        <li><strong><a th:href="@{/stories}" class="brand">Blickwinkel</a></strong></li>
+    </ul>
+    <ul>
+        <li><a th:href="@{/stories}" th:aria-current="${active == 'stories'} ? 'page'">Stories</a></li>
+        <li><a th:href="@{/einzelmeldungen}" th:aria-current="${active == 'singletons'} ? 'page'">Einzelmeldungen</a></li>
+        <li><a th:href="@{/status}" th:aria-current="${active == 'status'} ? 'page'">Status</a></li>
+    </ul>
+</nav>
+
+</body>
+</html>

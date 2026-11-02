@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Status')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('status')}"></nav>
+
+<main class="container">
+    <h1>Status</h1>
+
+    <h2>Pipeline</h2>
+    <div class="grid pipeline">
+        <article th:each="e : ${pipeline}">
+            <p class="count" th:text="${e.value}">0</p>
+            <p class="muted" th:text="${e.key}">NEW</p>
+        </article>
+    </div>
+    <p class="muted">
+        NEW wartet auf das Embedding, EMBEDDED aufs Clustering. Bleiben dort dauerhaft
+        viele Artikel stehen, hängt ein Schritt.
+    </p>
+
+    <h2>Feeds</h2>
+    <div class="overflow-auto">
+        <table class="striped">
+            <thead>
+            <tr>
+                <th>Quelle</th>
+                <th>Feed</th>
+                <th>Letzter Abruf</th>
+                <th title="Artikel, die zuerst über diesen Feed kamen">24 h</th>
+                <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="f : ${feeds}" th:classappend="${f.lastError != null} ? 'error'">
+                <td>
+                    <strong th:text="${f.name}">NZZ</strong>
+                    <span th:if="${f.section == 'OPINION'}" class="badge opinion">Meinung</span><br>
+                    <small class="muted" th:text="${f.country}">CH</small>
+                </td>
+                <td>
+                    <small><a th:href="${f.url}" th:text="${f.url}" target="_blank" rel="noopener">URL</a></small>
+                    <br th:if="${f.lastError != null}">
+                    <small th:if="${f.lastError != null}" class="error-text" th:text="${f.lastError}">Fehler</small>
+                </td>
+                <td><small th:text="${f.lastFetchedAt != null ? @fmt.time(f.lastFetchedAt) : 'nie'}">02.11. 18:25</small></td>
+                <td th:text="${f.articles24h}">0</td>
+                <td th:text="${f.articlesTotal}">0</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

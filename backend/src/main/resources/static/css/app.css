@@ -1,0 +1,88 @@
+/* Ergänzungen zu Pico.css. Farben über Pico-Variablen, damit Hell/Dunkel stimmt. */
+
+.brand {
+    text-decoration: none;
+}
+
+.muted {
+    color: var(--pico-muted-color);
+}
+
+/* Filterzeile: Felder nebeneinander, auf schmalen Bildschirmen untereinander */
+.filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.filters label {
+    flex: 1 1 12rem;
+}
+
+/* Story-Liste */
+.story {
+    padding-top: 1rem;
+    padding-bottom: 0.75rem;
+}
+
+.story-title {
+    font-size: 1.15rem;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.story .meta {
+    margin: 0.25rem 0 0.5rem;
+    font-size: 0.875rem;
+    color: var(--pico-muted-color);
+}
+
+.badges {
+    margin: 0;
+}
+
+.badge {
+    display: inline-block;
+    margin: 0 0.25rem 0.25rem 0;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    background: var(--pico-muted-border-color);
+}
+
+.badge.opinion {
+    background: var(--pico-mark-background-color);
+    color: var(--pico-mark-color);
+}
+
+/* Einzelmeldungen knapp unter dem Schwellwert */
+tr.near td,
+.near-sample {
+    background: var(--pico-mark-background-color);
+    color: var(--pico-mark-color);
+}
+
+.near-sample {
+    padding: 0 0.25rem;
+}
+
+/* Status */
+.pipeline article {
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+.pipeline .count {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.pipeline .muted {
+    margin: 0;
+}
+
+.error-text {
+    color: var(--pico-del-color);
+}
