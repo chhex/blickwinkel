@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${story.title})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('stories')}"></nav>
+
+<main class="container">
+    <p><a th:href="@{/stories}">← Alle Stories</a></p>
+
+    <hgroup>
+        <h1 th:text="${story.title}">Titel</h1>
+        <p th:text="${story.articles.size()} + ' Artikel · ' + ${@fmt.span(story.firstSeenAt, story.lastSeenAt)}">
+            4 Artikel · 01.11. 16:33 – 23:35
+        </p>
+    </hgroup>
+
+    <div class="overflow-auto">
+        <table class="striped">
+            <thead>
+            <tr>
+                <th>Quelle</th>
+                <th>Schlagzeile</th>
+                <th>Zeit</th>
+                <th title="Ähnlichkeit zum Mittelpunkt der Story beim Zuordnen. 1.00 = Gründer der Story">Ähnl.</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${story.articles}">
+                <td>
+                    <strong th:text="${a.source}">NZZ</strong><br>
+                    <small class="muted" th:text="${a.country} + ' · ' + ${a.language}">CH · de</small>
+                    <span th:if="${a.section == 'OPINION'}" class="badge opinion">Meinung</span>
+                </td>
+                <td>
+                    <a th:href="${a.url}" th:text="${a.title}" target="_blank" rel="noopener">Schlagzeile</a>
+                    <br th:if="${a.teaser != null}">
+                    <small th:if="${a.teaser != null}" class="muted" th:text="${#strings.abbreviate(a.teaser, 280)}">Teaser</small>
+                </td>
+                <td><small th:text="${@fmt.time(a.publishedAt)}">01.11. 16:33</small></td>
+                <td th:text="${@fmt.sim(a.similarity)}">0.75</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

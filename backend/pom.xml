@@ -32,6 +32,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
+        <!-- Serverseitiges UI; htmx und Pico.css liegen versioniert unter static/vendor -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
         <!-- Flyway migriert beim App-Start; der Build selbst braucht keine DB -->
         <dependency>
             <groupId>org.flywaydb</groupId>

@@ -1,13 +1,15 @@
 # Blickwinkel
 
-Privater News-Vergleich à la Ground News. Teil 1: **Ingest → Embedding → Clustering**.
+Privater News-Vergleich à la Ground News: **Ingest → Embedding → Clustering**, dazu ein
+serverseitiges UI.
 
 ```
 sources.yml ─► SourceSync ─► source, source_feed
 RSS-Feeds ──► IngestService ─► article (NEW)
                  EmbeddingService ─► article (EMBEDDED)   Ollama bge-m3
                  ClusteringService ─► article (CLUSTERED) + story
-                                     GET /api/stories
+                                     UI  /stories, /einzelmeldungen, /status
+                                     API /api/stories
 ```
 
 Die Pipeline ist über die Status-Spalte in `article` entkoppelt. Ein weiterer
@@ -21,6 +23,7 @@ Code zu kennen.
 - Postgres 17 + pgvector
 - Ollama mit `bge-m3` (multilingual, 1024 Dimensionen, DE/FR/ES/EN im selben Raum)
 - Rome (RSS/Atom), jsoup (HTML aus Teasern entfernen)
+- UI: Thymeleaf, htmx 2.0.11, Pico.css 2.1.1 (beide versioniert unter `static/vendor/`, kein CDN)
 
 ## Secrets
 
@@ -44,11 +47,29 @@ Compose die App **nicht** mit (Profil `app`), sie läuft über Maven.
 Start eines leeren Volumes. Wer schon Daten hat, setzt in `.env` das bisherige
 Passwort (`blickwinkel`) oder beginnt neu mit `docker compose down -v`.
 
-Nach ein paar Minuten:
+Nach ein paar Minuten: **http://localhost:8080** im Browser, oder per API:
 
 ```bash
 curl 'http://localhost:8080/api/stories?hours=24&minSources=2' | jq
 ```
+
+## UI
+
+| Seite | Inhalt |
+|---|---|
+| `/stories` | Stories mit Quellen-Badges, Filter Zeitraum und Mindestanzahl Quellen |
+| `/stories/{id}` | alle Schlagzeilen einer Story nebeneinander, Meinungsbeiträge markiert |
+| `/einzelmeldungen` | Artikel ohne zweite Quelle, mit der ähnlichsten fremden Story. Markiert sind Fälle knapp unter dem Schwellwert: das Werkzeug zum Kalibrieren |
+| `/status` | Pipeline-Zähler und Zustand jedes Feeds |
+
+**Story-Titel:** der Titel des Artikels, der dem Centroid am nächsten liegt.
+
+**htmx:** Filter laden nur die Liste neu. Der Controller erkennt htmx am Header
+`HX-Request` und rendert dann nur das Thymeleaf-Fragment statt der ganzen Seite.
+Die Abfragen liegen in `StoryQueryService` und werden auch von der REST-API benutzt.
+
+Kein Login: Das UI ist für das Heimnetz gedacht. Vor einer Freigabe nach aussen
+braucht es einen Zugangsschutz.
 
 **Mac-Hinweis:** Ollama in Docker läuft auf dem Mac ohne GPU. Für Embeddings
 reicht das, schneller ist die native Ollama-App. Dann den `ollama`-Service in

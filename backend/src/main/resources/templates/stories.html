@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Stories')}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: nav('stories')}"></nav>
+
+<main class="container">
+    <h1>Stories</h1>
+
+    <!-- Filter: htmx holt bei jeder Änderung nur die Liste neu -->
+    <form class="filters" action="/stories" method="get"
+          hx-get="/stories" hx-target="#list" hx-swap="outerHTML"
+          hx-trigger="change" hx-push-url="true">
+        <label>Zeitraum
+            <select name="hours">
+                <option th:each="h : ${ {6, 24, 48, 168} }" th:value="${h}"
+                        th:text="${h == 168 ? '7 Tage' : h + ' Stunden'}"
+                        th:selected="${h == hours}">24 Stunden</option>
+            </select>
+        </label>
+        <label>Mindestens
+            <select name="minSources">
+                <option th:each="m : ${ {1, 2, 3, 4} }" th:value="${m}"
+                        th:text="${m == 1 ? '1 Quelle' : m + ' Quellen'}"
+                        th:selected="${m == minSources}">2 Quellen</option>
+            </select>
+        </label>
+    </form>
+
+    <section id="list" th:fragment="list">
+        <p th:if="${#lists.isEmpty(stories)}" class="muted">Keine Stories in diesem Zeitraum.</p>
+        <article th:each="s : ${stories}" class="story">
+            <a th:href="@{/stories/{id}(id=${s.id})}" class="story-title" th:text="${s.title}">Titel</a>
+            <p class="meta"
+               th:text="${s.sources.size()} + ' Quellen · ' + ${s.articleCount} + ' Artikel · ' + ${@fmt.span(s.firstSeenAt, s.lastSeenAt)}">
+                3 Quellen · 4 Artikel · 01.11. 16:33 – 23:35
+            </p>
+            <p class="badges"><span class="badge" th:each="n : ${s.sources}" th:text="${n}">NZZ</span></p>
+        </article>
+    </section>
+</main>
+</body>
+</html>
