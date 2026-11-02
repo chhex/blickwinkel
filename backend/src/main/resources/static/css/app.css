@@ -56,6 +56,33 @@
     color: var(--pico-mark-color);
 }
 
+/* Aufklappbarer Teaser: liest sich wie Fliesstext, ohne Pico-Rahmen und Pfeil */
+details.teaser {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+details.teaser summary {
+    display: inline;
+    list-style: none;
+    cursor: pointer;
+}
+
+details.teaser summary::-webkit-details-marker,
+details.teaser summary::after {
+    display: none;
+}
+
+details.teaser .more {
+    color: var(--pico-primary);
+}
+
+details.teaser[open] .more {
+    display: none;
+}
+
 /* Einzelmeldungen knapp unter dem Schwellwert */
 tr.near td,
 .near-sample {

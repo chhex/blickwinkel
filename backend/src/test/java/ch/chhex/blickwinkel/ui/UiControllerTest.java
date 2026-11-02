@@ -46,6 +46,9 @@ class UiControllerTest {
 
     private static final OffsetDateTime T = OffsetDateTime.of(2026, 11, 1, 15, 33, 0, 0, ZoneOffset.UTC);
 
+    /** 300 Zeichen Anfang plus ein erkennbares Ende, damit der aufklappbare Teil greift. */
+    private static final String LANGER_TEASER = "x".repeat(300) + "ENDE-DES-TEASERS";
+
     @Autowired
     MockMvc mvc;
 
@@ -67,7 +70,9 @@ class UiControllerTest {
                         new StoryArticle("NZZ Meinung", "OPINION", "CH", "de", "Die Armee braucht mehr",
                                 "Ein Kommentar", "https://nzz.ch/a", T, 0.81f),
                         new StoryArticle("SRF News", "NEWS", "CH", "de", "Mehr Geld für die Armee",
-                                null, "https://srf.ch/b", null, null)))));
+                                null, "https://srf.ch/b", null, null),
+                        new StoryArticle("Le Temps", "NEWS", "CH", "fr", "Le budget de l'armée augmente",
+                                LANGER_TEASER, "https://letemps.ch/c", T, 0.74f)))));
 
         when(stories.singletons(anyInt(), any(), anyInt())).thenReturn(List.of(
                 new Singleton(1, "NZZ", "Knapp verpasst", "https://nzz.ch/c", T, 505L, "Bundesrat erhöht Armeebudget", 0.68),
@@ -116,6 +121,17 @@ class UiControllerTest {
                 .andExpect(content().string(containsString("Die Armee braucht mehr")))
                 .andExpect(content().string(containsString("Meinung")))
                 .andExpect(content().string(containsString("0.81")));
+    }
+
+    @Test
+    void langerTeaserIstAufklappbarUndVollstaendig() throws Exception {
+        mvc.perform(get("/stories/505"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("<details class=\"teaser\">")))
+                .andExpect(content().string(containsString("… mehr")))
+                .andExpect(content().string(containsString("ENDE-DES-TEASERS")))
+                // kurzer Teaser bleibt ohne Aufklappen
+                .andExpect(content().string(containsString(">Ein Kommentar<")));
     }
 
     @Test
