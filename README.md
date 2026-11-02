@@ -3,7 +3,7 @@
 Privater News-Vergleich à la Ground News. Teil 1: **Ingest → Embedding → Clustering**.
 
 ```
-sources.yml ─► SourceSync ─► source
+sources.yml ─► SourceSync ─► source, source_feed
 RSS-Feeds ──► IngestService ─► article (NEW)
                  EmbeddingService ─► article (EMBEDDED)   Ollama bge-m3
                  ClusteringService ─► article (CLUSTERED) + story
@@ -105,13 +105,17 @@ Verteilung anschauen.
 
 ## Quellen
 
-`src/main/resources/sources.yml`. Beim Start werden neue Codes angelegt,
-bestehende aktualisiert und entfernte deaktiviert (nicht gelöscht).
-Meinungsseiten als eigene Quelle mit `section: OPINION` führen.
-`camp` ist für dein eigenes Lager-Tag reserviert.
+`backend/src/main/resources/sources.yml`. Beim Start werden neue Codes und Feeds
+angelegt, bestehende aktualisiert und entfernte deaktiviert (nicht gelöscht).
 
-Feeds mit `[?]` sind nicht live geprüft. Fehler stehen pro Quelle im Log und in
-`source.last_error`.
+- Eine **Quelle** ist eine Redaktion, sie kann mehrere **Feeds** haben (`feed-urls`),
+  z.B. World und Startseite. Doppelte Artikel werden über die URL erkannt.
+- Meinungsseiten als eigene Quelle mit `section: OPINION` führen.
+- `camp` ist für dein eigenes Lager-Tag reserviert.
+- Ungültige Einträge (doppelter Code, Quelle ohne Feed, URL bei zwei Quellen)
+  brechen den Start mit klarer Meldung ab.
+
+Fehler stehen pro Feed im Log und in `source_feed.last_error`.
 
 ## SQL und pgvector
 
@@ -125,5 +129,10 @@ Postgres-Enums werden als String-Literal (`status = 'NEW'`) oder mit
 
 ## Tests
 
-`mvn test`: UrlNormalizer, Vektor-Textformat, Centroid-Mathematik.
-Integrationstests mit Testcontainers sind der nächste sinnvolle Schritt.
+`mvn test` (in `backend/`): UrlNormalizer, Vektor-Textformat, Centroid-Mathematik,
+Validierung von sources.yml. Integrationstests mit Testcontainers sind der nächste
+sinnvolle Schritt.
+
+**CI:** Jeder Pull Request wird auf einem GitHub-eigenen Runner gebaut und getestet
+(`.github/workflows/ci.yml`), inklusive Prüfung der Compose-Datei. Der NUC ist daran
+nicht beteiligt; deployt wird erst beim Merge auf `main`.
