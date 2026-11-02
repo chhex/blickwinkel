@@ -1,6 +1,6 @@
 # Datenmodell und Entity-Lebenszyklen
 
-Stand: 24.10.2026. Dieses Dokument beschreibt
+Stand: 2.11.2026 (mehrere Feeds pro Quelle, Migration V2). Dieses Dokument beschreibt
 
 - **Ist:** was der Code heute tatsächlich tut, inklusive impliziter Übergänge und Lücken
 - **Soll:** einen **Vorschlag** für saubere Lebenszyklen, zur Diskussion. Nichts davon ist umgesetzt.
@@ -11,7 +11,9 @@ Stand: 24.10.2026. Dieses Dokument beschreibt
 
 ```mermaid
 erDiagram
+    source ||--|{ source_feed : "hat"
     source ||--o{ article : "liefert"
+    source_feed |o--o{ article : "brachte zuerst"
     story |o--o{ article : "bündelt"
 
     source {
@@ -21,8 +23,14 @@ erDiagram
         char country "CH, DE, ..."
         char language "de, fr, ..."
         source_section section "NEWS oder OPINION"
-        text feed_url UK
         text camp "eigenes Lager-Tag, optional"
+        boolean active
+    }
+
+    source_feed {
+        bigint id PK
+        bigint source_id FK
+        text url UK
         boolean active
         timestamptz last_fetched_at
         text last_error
@@ -31,6 +39,7 @@ erDiagram
     article {
         bigint id PK
         bigint source_id FK
+        bigint feed_id FK "Feed, der den Artikel zuerst lieferte"
         bigint story_id FK "null bis geclustert"
         text url
         char url_hash UK "SHA-256 der normalisierten URL"
@@ -54,6 +63,11 @@ erDiagram
     }
 ```
 
+**Quelle und Feed:** Eine Quelle ist eine Redaktion, ein Feed nur ein Zugang (z.B. World
+und Startseite). Steht derselbe Artikel in zwei Feeds derselben Quelle, wird er über
+`url_hash` erkannt und nur einmal gespeichert; `feed_id` zeigt auf den Feed, der ihn zuerst
+lieferte.
+
 **Artikelzeit:** Überall, wo der Lebenszyklus mit Zeit rechnet, gilt
 `coalesce(published_at, fetched_at)`. Fehlt das Publikationsdatum, zählt der Abrufzeitpunkt.
 
@@ -66,8 +80,8 @@ und keine externen Trigger.
 
 | # | Event | Auslöser | Takt | Betroffene Entität |
 |---|---|---|---|---|
-| E1 | `SourceSync.run` | App-Start | einmal | `source` |
-| E2 | `IngestService.ingestAll` | Scheduler | 20 Min. nach Ende des letzten Laufs, erster Lauf 10 s nach Start | `source`, `article` |
+| E1 | `SourceSync.run` | App-Start | einmal | `source`, `source_feed` |
+| E2 | `IngestService.ingestAll` | Scheduler | 20 Min. nach Ende des letzten Laufs, erster Lauf 10 s nach Start | `source_feed`, `article` |
 | E3 | `EmbeddingService.embedPending` | Scheduler | 1 Min. nach Ende, erster Lauf nach 20 s | `article` |
 | E4 | `ClusteringService.clusterPending` | Scheduler | 1 Min. nach Ende, erster Lauf nach 30 s | `article`, `story` |
 | T1 | Zeitablauf 48 h | keiner, rein implizit | – | `story` |
@@ -77,30 +91,44 @@ Zwei Eigenschaften, die für die Lebenszyklen wichtig sind:
 - **`fixedDelay`:** Das Intervall zählt ab dem *Ende* des letzten Laufs. Ein Job überholt sich nie selbst.
 - **Ein einziger Scheduler-Thread:** Spring Boot hat standardmässig einen Pool der Grösse 1.
   E2, E3 und E4 laufen deshalb **nie gleichzeitig**, sondern nacheinander. Das schliesst
-  Wettläufe zwischen den Jobs aus. Die Kehrseite: Ein langsamer Ingest (11 Feeds mit je bis
+  Wettläufe zwischen den Jobs aus. Die Kehrseite: Ein langsamer Ingest (27 Feeds mit je bis
   zu 20 s Timeout) verzögert Embedding und Clustering.
 
 ---
 
 ## 3. Lebenszyklen (Ist)
 
-### 3.1 `source`
+### 3.1 `source` und `source_feed`
 
-Explizit modelliert ist nur `active`. Gesundheit (`last_error`) wird protokolliert, hat aber
-keine Konsequenz: Ein dauerhaft kaputter Feed wird weiterhin alle 20 Minuten abgerufen.
+Bei der Quelle ist nur `active` modelliert, gesteuert allein durch sources.yml.
 
 ```mermaid
 stateDiagram-v2
     [*] --> ACTIVE : E1, Code neu in sources.yml
-    ACTIVE --> ACTIVE : E2, Abruf ok, last_fetched_at gesetzt, last_error geleert
-    ACTIVE --> ACTIVE : E2, Abruf fehlgeschlagen, last_error gesetzt
     ACTIVE --> INACTIVE : E1, Code aus sources.yml entfernt
     INACTIVE --> ACTIVE : E1, Code wieder in sources.yml
 ```
 
+Der Feed hat denselben Zustand, dazu den Status des letzten Abrufs. Abgerufen werden nur
+aktive Feeds aktiver Quellen.
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE : E1, URL neu in sources.yml
+    ACTIVE --> ACTIVE : E2, Abruf ok, last_fetched_at gesetzt, last_error geleert
+    ACTIVE --> ACTIVE : E2, Abruf fehlgeschlagen, last_error gesetzt
+    ACTIVE --> INACTIVE : E1, URL aus sources.yml entfernt
+    INACTIVE --> ACTIVE : E1, URL wieder in sources.yml
+```
+
+E1 prüft sources.yml vorher und bricht den Start ab bei doppeltem Code, einer Quelle ohne
+Feeds oder einer URL, die bei zwei Quellen steht. Wandert eine URL in der YAML zu einer
+anderen Quelle, zieht der Feed mit um.
+
 **Lücken:**
-- Ein Code-Wechsel bei gleicher `feed_url` verletzt den Unique-Constraint und lässt E1 und damit den Start scheitern.
+- Gesundheit (`last_error`) wird protokolliert, hat aber keine Konsequenz: Ein dauerhaft kaputter Feed wird weiterhin alle 20 Minuten abgerufen.
 - Es gibt keine Unterscheidung zwischen «einmal ausgefallen» und «seit Tagen tot».
+- Wird ein Code umbenannt, entsteht eine neue Quelle, und die bisherigen Artikel bleiben bei der alten (deaktivierten).
 
 ### 3.2 `article`
 
@@ -174,15 +202,17 @@ Implizite Zustände werden zu Spalten, Endlos-Schleifen zu begrenzten Wiederholu
 | E5 | `StoryCloser.closeStale` | stündlich | `OPEN → CLOSED` für Stories ohne Aktivität |
 | E6 | Requeue | manuell (SQL oder Admin-Endpoint) | `FAILED → NEW`, etwa nach Modellwechsel |
 
-E2 bekommt einen **Backoff** für kranke Quellen (siehe 4.2).
+E2 bekommt einen **Backoff** für kranke Feeds (siehe 4.2).
 
-### 4.2 `source`
+### 4.2 `source_feed` (Gesundheit pro Feed)
 
-Neue Spalten: `health` (Enum), `consecutive_failures` (int).
+Neue Spalten in `source_feed`: `health` (Enum), `consecutive_failures` (int). Seit V2 gehört die
+Gesundheit zum Feed, nicht zur Quelle: Bei der NYT kann der World-Feed ausfallen, während
+der Startseiten-Feed läuft.
 
 ```mermaid
 stateDiagram-v2
-    [*] --> HEALTHY : E1, Code neu
+    [*] --> HEALTHY : E1, URL neu
     HEALTHY --> FAILING : E2, Abruf fehlgeschlagen
     FAILING --> FAILING : E2, weiterer Fehler, Zähler plus 1
     FAILING --> HEALTHY : E2, Abruf ok, Zähler 0

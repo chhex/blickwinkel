@@ -26,14 +26,17 @@ public record BlickwinkelProperties(
     public record Clustering(double similarityThreshold, Duration window, int batchSize) {
     }
 
-    /** Ein Eintrag aus sources.yml. {@code camp} darf leer sein. */
+    /**
+     * Ein Eintrag aus sources.yml: eine Quelle (Redaktion) mit einem oder mehreren Feeds.
+     * {@code camp} darf leer sein.
+     */
     public record SourceDefinition(
             String code,
             String name,
             String country,
             String language,
             String section,
-            URI feedUrl,
+            List<URI> feedUrls,
             String camp) {
     }
 }

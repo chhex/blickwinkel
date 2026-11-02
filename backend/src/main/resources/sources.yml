@@ -1,12 +1,16 @@
-# Quellenkatalog. Wird beim Start in die Tabelle `source` synchronisiert:
-# neue Codes werden angelegt, bestehende aktualisiert, entfernte deaktiviert.
+# Quellenkatalog. Wird beim Start in die Tabellen `source` und `source_feed`
+# synchronisiert: neue Codes und Feeds werden angelegt, bestehende aktualisiert,
+# entfernte deaktiviert (nicht gelöscht).
 #
-# section: NEWS oder OPINION  (Meinung bewusst als eigene "Quelle" führen)
+# Eine Quelle ist eine Redaktion, ein Feed nur ein Zugang. Mehrere Feeds derselben
+# Redaktion (z.B. World und Startseite) gehören unter dieselbe Quelle; doppelte
+# Artikel werden über die URL erkannt und nur einmal gespeichert.
+#
+# section: NEWS oder OPINION  (Meinung bewusst als eigene Quelle führen)
 # camp:    dein eigenes Lager-Tag, frei wählbar, vorerst leer
+# country: ISO-Code (CH, DE, FR, ES, US, GB)
 #
-# Status der Feed-URLs (geprüft am 2026-10-17):
-#   [ok]   Feed abgerufen und als RSS/Atom erkannt
-#   [?]    aus Verzeichnis/Doku übernommen, beim ersten Lauf im Log prüfen
+# Alle Feeds geprüft am 2.11.2026 (HTTP 200, Einträge vorhanden).
 
 blickwinkel:
   sources:
@@ -16,44 +20,51 @@ blickwinkel:
       country: CH
       language: de
       section: NEWS
-      feed-url: https://www.nzz.ch/recent.rss                # [?] laut Feed-Verzeichnis
+      feed-urls:
+        - https://www.nzz.ch/recent.rss
     - code: nzz-meinung
       name: NZZ Meinung
       country: CH
       language: de
       section: OPINION
-      feed-url: https://www.nzz.ch/meinung.rss               # [?]
+      feed-urls:
+        - https://www.nzz.ch/meinung.rss
     - code: srf
       name: SRF News
       country: CH
       language: de
       section: NEWS
-      feed-url: https://www.srf.ch/news/bnf/rss/1646         # [ok]
+      feed-urls:
+        - https://www.srf.ch/news/bnf/rss/1646
     - code: tagesanzeiger
       name: Tages-Anzeiger
       country: CH
       language: de
       section: NEWS
-      feed-url: https://partner-feeds.publishing.tamedia.ch/rss/tagesanzeiger/ticker  # [?]
+      feed-urls:
+        - https://partner-feeds.publishing.tamedia.ch/rss/tagesanzeiger/ticker
     - code: watson
       name: watson
       country: CH
       language: de
       section: NEWS
-      feed-url: https://www.watson.ch/api/2.0/rss/index.xml  # [ok] Atom
+      feed-urls:
+        - https://www.watson.ch/api/2.0/rss/index.xml
     - code: infosperber
       name: Infosperber
       country: CH
       language: de
       section: NEWS
-      feed-url: https://www.infosperber.ch/feed/             # [ok]
+      feed-urls:
+        - https://www.infosperber.ch/feed/
     - code: letemps
       name: Le Temps
       country: CH
       language: fr
       section: NEWS
-      feed-url: https://www.letemps.ch/articles.rss          # [?]
-    # Weltwoche, WOZ, Nebelspalter, Republik: Feed-URL noch offen, bitte ergänzen
+      feed-urls:
+        - https://www.letemps.ch/articles.rss
+    # Weltwoche, WOZ, Nebelspalter, Republik: Feed-URL noch offen
 
     # --- Deutschland ---
     - code: spiegel
@@ -61,7 +72,8 @@ blickwinkel:
       country: DE
       language: de
       section: NEWS
-      feed-url: https://www.spiegel.de/schlagzeilen/index.rss  # [?]
+      feed-urls:
+        - https://www.spiegel.de/schlagzeilen/index.rss
 
     # --- Frankreich / Spanien ---
     - code: lemonde
@@ -69,18 +81,89 @@ blickwinkel:
       country: FR
       language: fr
       section: NEWS
-      feed-url: https://www.lemonde.fr/rss/une.xml           # [?]
+      feed-urls:
+        - https://www.lemonde.fr/rss/une.xml
     - code: elpais
       name: El País
       country: ES
       language: es
       section: NEWS
-      feed-url: https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada  # [?]
+      feed-urls:
+        - https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada
+
+    # --- Grossbritannien ---
+    - code: guardian
+      name: The Guardian
+      country: GB
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://www.theguardian.com/world/rss
+        - https://www.theguardian.com/international/rss
+    - code: bbc
+      name: BBC News
+      country: GB
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://feeds.bbci.co.uk/news/world/rss.xml
+        - https://feeds.bbci.co.uk/news/rss.xml
+    - code: ft
+      name: Financial Times
+      country: GB
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://www.ft.com/world?format=rss
+        - https://www.ft.com/rss/home
 
     # --- USA ---
+    # Code bleibt wsj-world (fachlicher Schlüssel, bestehende Artikel hängen daran),
+    # die Quelle umfasst jetzt aber World und US News.
     - code: wsj-world
-      name: WSJ World
+      name: Wall Street Journal
       country: US
       language: en
       section: NEWS
-      feed-url: https://feeds.content.dowjones.io/public/rss/RSSWorldNews  # [ok]
+      feed-urls:
+        - https://feeds.content.dowjones.io/public/rss/RSSWorldNews
+        - https://feeds.content.dowjones.io/public/rss/RSSUSnews
+    - code: nyt
+      name: The New York Times
+      country: US
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://rss.nytimes.com/services/xml/rss/nyt/World.xml
+        - https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
+    - code: npr
+      name: NPR
+      country: US
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://feeds.npr.org/1004/rss.xml
+        - https://feeds.npr.org/1001/rss.xml
+    - code: thehill
+      name: The Hill
+      country: US
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://thehill.com/policy/international/feed/
+        - https://thehill.com/news/feed/
+    - code: wexaminer
+      name: Washington Examiner
+      country: US
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://www.washingtonexaminer.com/section/news/feed/
+    - code: foxnews
+      name: Fox News
+      country: US
+      language: en
+      section: NEWS
+      feed-urls:
+        - https://moxie.foxnews.com/google-publisher/world.xml
+        - https://moxie.foxnews.com/google-publisher/latest.xml
