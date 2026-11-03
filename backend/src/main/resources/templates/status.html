@@ -19,6 +19,24 @@
         viele Artikel stehen, hängt ein Schritt.
     </p>
 
+    <h2>Übersetzung</h2>
+    <p th:if="${!translation.enabled}" class="muted">
+        Nicht eingerichtet. Mit einem DeepL-Schlüssel in <code>DEEPL_API_KEY</code> erscheinen
+        im Story-Detail Knöpfe zum Übersetzen.
+    </p>
+    <p th:if="${translation.enabled and translationUsage == null}" class="muted">
+        Eingerichtet, das Kontingent ist im Moment aber nicht abrufbar.
+    </p>
+    <th:block th:if="${translation.enabled and translationUsage != null}">
+        <p>
+            DeepL: <strong th:text="${@fmt.count(translationUsage.characterCount)}">12’345</strong>
+            von <span th:text="${@fmt.count(translationUsage.characterLimit)}">500’000</span> Zeichen
+            in diesem Monat verbraucht
+            (<span th:text="${@fmt.percent(translationUsage.characterCount, translationUsage.characterLimit)}">2 %</span>).
+        </p>
+        <progress th:value="${translationUsage.characterCount}" th:max="${translationUsage.characterLimit}"></progress>
+    </th:block>
+
     <h2>Feeds</h2>
     <div class="overflow-auto">
         <table class="striped">

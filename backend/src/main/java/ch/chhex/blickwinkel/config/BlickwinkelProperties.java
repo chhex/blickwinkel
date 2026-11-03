@@ -15,6 +15,7 @@ public record BlickwinkelProperties(
         Ingest ingest,
         Embedding embedding,
         Clustering clustering,
+        Translation translation,
         List<SourceDefinition> sources) {
 
     public record Ingest(Duration timeout, int teaserMaxLength, String userAgent) {
@@ -24,6 +25,14 @@ public record BlickwinkelProperties(
     }
 
     public record Clustering(double similarityThreshold, Duration window, int batchSize) {
+    }
+
+    /**
+     * Übersetzung auf Abruf. Ohne {@code deeplApiKey} ist die Funktion aus.
+     * {@code deeplBaseUrl} leer = automatisch: Gratis-Schlüssel (enden auf ":fx")
+     * gehen an api-free.deepl.com, alle anderen an api.deepl.com.
+     */
+    public record Translation(String deeplApiKey, String deeplBaseUrl, List<String> targetLanguages) {
     }
 
     /**

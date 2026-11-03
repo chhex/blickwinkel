@@ -64,6 +64,19 @@ curl 'http://localhost:8080/api/stories?hours=24&minSources=2' | jq
 
 **Story-Titel:** der Titel des Artikels, der dem Centroid am nächsten liegt.
 
+**Übersetzung:** Im Story-Detail hat jeder Artikel Knöpfe **DE · EN · ES** (die eigene
+Sprache fehlt). Ein Klick übersetzt Titel und Teaser dieses einen Artikels über DeepL;
+«Original» schaltet zurück. Nichts wird automatisch übersetzt. Jede Übersetzung wird in
+`article_translation` gespeichert und danach nicht mehr beim Anbieter angefragt.
+Den Verbrauch des DeepL-Kontingents zeigt die Statusseite.
+
+- Einschalten: `DEEPL_API_KEY` in `.env` setzen (auf dem NUC: `/opt/blickwinkel/.env`),
+  danach neu deployen bzw. neu starten. Ohne Schlüssel erscheinen keine Knöpfe.
+- Gratis-Schlüssel enden auf `:fx` und laufen automatisch über `api-free.deepl.com`.
+- Der Anbieter steckt hinter `TranslationClient`; ein lokales LLM wäre eine weitere
+  Implementierung.
+- Bewertungen (z.B. Clickbait) laufen immer auf dem Original, nie auf der Übersetzung.
+
 **htmx:** Filter laden nur die Liste neu. Der Controller erkennt htmx am Header
 `HX-Request` und rendert dann nur das Thymeleaf-Fragment statt der ganzen Seite.
 Die Abfragen liegen in `StoryQueryService` und werden auch von der REST-API benutzt.
