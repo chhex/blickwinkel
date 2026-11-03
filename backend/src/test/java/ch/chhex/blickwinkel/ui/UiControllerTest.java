@@ -236,8 +236,8 @@ class UiControllerTest {
     void statusZeigtKontingent() throws Exception {
         mvc.perform(get("/status"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("12'345")))
-                .andExpect(content().string(containsString("500'000")))
+                .andExpect(content().string(containsString("12’345")))
+                .andExpect(content().string(containsString("500’000")))
                 .andExpect(content().string(containsString("2 %")));
     }
 

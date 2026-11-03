@@ -41,10 +41,13 @@ public class Formats {
         return time(from) + " – " + end;
     }
 
-    /** Ganze Zahl mit Schweizer Tausendertrennzeichen, z.B. «12'345». */
+    /**
+     * Ganze Zahl mit Schweizer Tausendertrennzeichen, z.B. «12’345». Bewusst der typografische
+     * Apostroph (U+2019): Der gerade würde im HTML zu &#39; maskiert.
+     */
     public String count(long value) {
         DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.ROOT);
-        symbols.setGroupingSeparator('\'');
+        symbols.setGroupingSeparator('\u2019');
         return new DecimalFormat("#,##0", symbols).format(value);
     }
 

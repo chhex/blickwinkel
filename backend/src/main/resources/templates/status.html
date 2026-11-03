@@ -29,8 +29,8 @@
     </p>
     <th:block th:if="${translation.enabled and translationUsage != null}">
         <p>
-            DeepL: <strong th:text="${@fmt.count(translationUsage.characterCount)}">12'345</strong>
-            von <span th:text="${@fmt.count(translationUsage.characterLimit)}">500'000</span> Zeichen
+            DeepL: <strong th:text="${@fmt.count(translationUsage.characterCount)}">12’345</strong>
+            von <span th:text="${@fmt.count(translationUsage.characterLimit)}">500’000</span> Zeichen
             in diesem Monat verbraucht
             (<span th:text="${@fmt.percent(translationUsage.characterCount, translationUsage.characterLimit)}">2 %</span>).
         </p>
