@@ -1,10 +1,14 @@
 package ch.chhex.blickwinkel.ui;
 
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +21,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.chhex.blickwinkel.source.SourceStatusService;
 import ch.chhex.blickwinkel.story.StoryQueryService;
+import ch.chhex.blickwinkel.story.StorySort;
 import ch.chhex.blickwinkel.translation.TranslationException;
 import ch.chhex.blickwinkel.translation.TranslationService;
 import ch.chhex.blickwinkel.translation.TranslationService.Translation;
@@ -62,12 +67,25 @@ public class UiController {
     @GetMapping("/stories")
     public String stories(
             @RequestParam(defaultValue = "24") int hours,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate von,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate bis,
             @RequestParam(defaultValue = "2") int minSources,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String sort,
             @RequestHeader(value = HX_REQUEST, required = false) String htmx,
             Model model) {
-        model.addAttribute("hours", hours);
-        model.addAttribute("minSources", minSources);
-        model.addAttribute("stories", stories.recentStories(hours, minSources, 200));
+        var p = StoryListParams.of(hours, von, bis, minSources, q, sort);
+        var list = stories.search(p.toFilter(OffsetDateTime.now(ZoneOffset.UTC)));
+
+        model.addAttribute("hours", p.hours());
+        model.addAttribute("von", p.von());
+        model.addAttribute("bis", p.bis());
+        model.addAttribute("minSources", p.minSources());
+        model.addAttribute("q", p.q());
+        model.addAttribute("sort", p.sort().code());
+        model.addAttribute("sorts", StorySort.values());
+        model.addAttribute("limit", StoryListParams.LIMIT);
+        model.addAttribute("stories", list);
         return htmx != null ? "stories :: list" : "stories";
     }
 

@@ -57,12 +57,23 @@ curl 'http://localhost:8080/api/stories?hours=24&minSources=2' | jq
 
 | Seite | Inhalt |
 |---|---|
-| `/stories` | Stories mit Quellen-Badges, Filter Zeitraum und Mindestanzahl Quellen |
+| `/stories` | Stories mit Quellen-Badges; Suche, Zeitraum oder Datumsbereich, Mindestanzahl Quellen, Sortierung |
 | `/stories/{id}` | alle Schlagzeilen einer Story nebeneinander, Meinungsbeiträge markiert |
 | `/einzelmeldungen` | Artikel ohne zweite Quelle, mit der ähnlichsten fremden Story. Markiert sind Fälle knapp unter dem Schwellwert: das Werkzeug zum Kalibrieren |
 | `/status` | Pipeline-Zähler und Zustand jedes Feeds |
 
 **Story-Titel:** der Titel des Artikels, der dem Centroid am nächsten liegt.
+
+**Suche:** Teilwort-Suche über Titel und Teaser, ohne Gross/Klein und Akzente
+(«Zurich» findet «Zürich», «Armee» findet «Armeebudget»). Mehrere Begriffe müssen alle
+im selben Artikel vorkommen. Eine Story erscheint, wenn mindestens einer ihrer Artikel
+passt. Technisch: Trigramm-Index (`pg_trgm`) auf einem normalisierten Ausdruck
+(`V4__search.sql`), bewusst ohne sprachabhängiges Stemming, weil vier Sprachen gemischt
+sind und deutsche Komposita sonst nicht gefunden würden.
+
+**Zeitraum:** entweder «die letzten N Stunden» oder ein Datumsbereich (Schweizer Zeit,
+«bis» einschliesslich). Eine Story zählt, wenn sich ihr Zeitraum mit dem gewählten
+überschneidet. Alle Filter stehen in der URL und lassen sich als Lesezeichen speichern.
 
 **Übersetzung:** Im Story-Detail hat jeder Artikel Knöpfe **DE · EN · ES** (die eigene
 Sprache fehlt). Ein Klick übersetzt Titel und Teaser dieses einen Artikels über DeepL;

@@ -7,16 +7,33 @@
 <main class="container">
     <h1>Stories</h1>
 
-    <!-- Filter: htmx holt bei jeder Änderung nur die Liste neu -->
+    <!--
+      Filter: htmx holt bei jeder Änderung nur die Liste neu und schreibt die Filter in die
+      URL (Lesezeichen möglich). Ohne JavaScript funktioniert das Formular als normales GET.
+      Fester Zeitraum und Datumsbereich schliessen sich aus: Wer das eine wählt, leert das andere.
+    -->
     <form class="filters" action="/stories" method="get"
           hx-get="/stories" hx-target="#list" hx-swap="outerHTML"
           hx-trigger="change" hx-push-url="true">
+
+        <input type="search" name="q" class="search" th:value="${q}"
+               placeholder="Suche in Titeln und Teasern, z.B. «Armee Budget»" aria-label="Suche"
+               hx-get="/stories" hx-include="closest form" hx-target="#list" hx-swap="outerHTML"
+               hx-trigger="input changed delay:400ms, search" hx-push-url="true">
+
         <label>Zeitraum
-            <select name="hours">
+            <select name="hours" hx-on:change="this.form.von.value = ''; this.form.bis.value = ''">
                 <option th:each="h : ${ {6, 24, 48, 168} }" th:value="${h}"
                         th:text="${h == 168 ? '7 Tage' : h + ' Stunden'}"
                         th:selected="${h == hours}">24 Stunden</option>
+                <option value="0" th:selected="${hours == 0}">Datumsbereich</option>
             </select>
+        </label>
+        <label>Von
+            <input type="date" name="von" th:value="${von}" hx-on:change="this.form.hours.value = '0'">
+        </label>
+        <label>Bis
+            <input type="date" name="bis" th:value="${bis}" hx-on:change="this.form.hours.value = '0'">
         </label>
         <label>Mindestens
             <select name="minSources">
@@ -25,10 +42,25 @@
                         th:selected="${m == minSources}">2 Quellen</option>
             </select>
         </label>
+        <label>Sortierung
+            <select name="sort">
+                <option th:each="o : ${sorts}" th:value="${o.code()}" th:text="${o.label()}"
+                        th:selected="${o.code() == sort}">Neueste zuerst</option>
+            </select>
+        </label>
     </form>
 
     <section id="list" th:fragment="list">
-        <p th:if="${#lists.isEmpty(stories)}" class="muted">Keine Stories in diesem Zeitraum.</p>
+        <p class="muted count" th:unless="${#lists.isEmpty(stories)}"
+           th:text="${#lists.size(stories) >= limit}
+                    ? 'Die ersten ' + ${limit} + ' Stories. Filter eingrenzen für mehr.'
+                    : (${#lists.size(stories) == 1} ? '1 Story' : ${#lists.size(stories)} + ' Stories')">
+            12 Stories
+        </p>
+        <p th:if="${#lists.isEmpty(stories)}" class="muted"
+           th:text="${q != null} ? 'Keine Stories mit «' + ${q} + '» in diesem Zeitraum.' : 'Keine Stories in diesem Zeitraum.'">
+            Keine Stories in diesem Zeitraum.
+        </p>
         <article th:each="s : ${stories}" class="story">
             <a th:href="@{/stories/{id}(id=${s.id})}" class="story-title" th:text="${s.title}">Titel</a>
             <p class="meta"

@@ -59,16 +59,37 @@ public class StoryQueryService {
 
     // --- SQL ------------------------------------------------------------------------
 
-    /** Stories mit mindestens :minSources Quellen; Titel und Quellennamen per Lateral-Join. */
+    /**
+     * Story-Übersicht. Eine Story erscheint, wenn sich ihr Zeitraum mit [:from, :to] überschneidet,
+     * sie mindestens :minSources Quellen hat und (falls :query gesetzt) mindestens einer ihrer
+     * Artikel alle Suchbegriffe in Titel oder Teaser enthält. Suche ohne Gross/Klein und Akzente,
+     * als Teilwort (V4__search.sql). {ORDER} wird durch einen fest hinterlegten Ausdruck aus
+     * {@link StorySort} ersetzt.
+     */
     private static final String SELECT_SUMMARIES = """
-            with selected as (
-                select st.id, st.first_seen_at, st.last_seen_at, st.article_count, st.centroid
+            with candidates as (
+                select st.id, st.first_seen_at, st.last_seen_at, st.article_count, st.centroid,
+                       (select count(distinct a.source_id)
+                        from article a
+                        where a.story_id = st.id) as source_count
                 from story st
-                where st.last_seen_at >= :since
-                  and (select count(distinct a.source_id)
-                       from article a
-                       where a.story_id = st.id) >= :minSources
-                order by st.last_seen_at desc, st.id desc
+                where st.last_seen_at  >= :from
+                  and st.first_seen_at <= :to
+                  and (cast(:query as text) is null or exists (
+                        select 1
+                        from article a
+                        where a.story_id = st.id
+                          and not exists (
+                              select 1
+                              from regexp_split_to_table(blickwinkel_norm(cast(:query as text)), ' ') as term
+                              where blickwinkel_norm(a.title || ' ' || coalesce(a.teaser, ''))
+                                    not like '%' || term || '%')))
+            ),
+            selected as (
+                select *
+                from candidates
+                where source_count >= :minSources
+                order by {ORDER}
                 limit :limit
             )
             select s.id, s.first_seen_at, s.last_seen_at, s.article_count,
@@ -87,7 +108,7 @@ public class StoryQueryService {
                 join source x on x.id = a.source_id
                 where a.story_id = s.id
             ) src
-            order by s.last_seen_at desc, s.id desc
+            order by {ORDER}
             """;
 
     private static final String SELECT_STORY = """
@@ -181,11 +202,13 @@ public class StoryQueryService {
         this.window = props.clustering().window();
     }
 
-    public List<StorySummary> recentStories(int hours, int minSources, int limit) {
-        return jdbc.sql(SELECT_SUMMARIES)
-                .param("since", since(hours))
-                .param("minSources", minSources)
-                .param("limit", clamp(limit))
+    public List<StorySummary> search(StoryFilter filter) {
+        return jdbc.sql(SELECT_SUMMARIES.replace("{ORDER}", filter.sort().orderBy()))
+                .param("from", filter.from())
+                .param("to", filter.to())
+                .param("minSources", filter.minSources())
+                .param("query", filter.likeQuery(), Types.VARCHAR)
+                .param("limit", clamp(filter.limit()))
                 .query((rs, n) -> new StorySummary(
                         rs.getLong("id"),
                         rs.getString("title"),

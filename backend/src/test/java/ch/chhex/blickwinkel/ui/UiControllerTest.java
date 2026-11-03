@@ -6,7 +6,10 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
@@ -20,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.ArgumentCaptor;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -30,7 +34,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import ch.chhex.blickwinkel.source.SourceStatusService;
 import ch.chhex.blickwinkel.source.SourceStatusService.FeedStatus;
 import ch.chhex.blickwinkel.source.SourceStatusService.SourceOption;
+import ch.chhex.blickwinkel.story.StoryFilter;
 import ch.chhex.blickwinkel.story.StoryQueryService;
+import ch.chhex.blickwinkel.story.StorySort;
 import ch.chhex.blickwinkel.story.StoryQueryService.Singleton;
 import ch.chhex.blickwinkel.story.StoryQueryService.StoryArticle;
 import ch.chhex.blickwinkel.story.StoryQueryService.StoryDetail;
@@ -71,7 +77,7 @@ class UiControllerTest {
 
     @BeforeEach
     void beispieldaten() {
-        when(stories.recentStories(anyInt(), anyInt(), anyInt())).thenReturn(List.of(
+        when(stories.search(any())).thenReturn(List.of(
                 new StorySummary(505, "Bundesrat erhöht Armeebudget", T, T.plusHours(7), 4,
                         List.of("NZZ", "SRF News", "watson"))));
 
@@ -124,6 +130,67 @@ class UiControllerTest {
                 .andExpect(content().string(containsString("Bundesrat erhöht Armeebudget")))
                 .andExpect(content().string(containsString("3 Quellen · 4 Artikel · 01.11. 16:33 – 23:33")))
                 .andExpect(content().string(containsString("/vendor/htmx-2.0.11.min.js")));
+    }
+
+    private StoryFilter captureFilter() {
+        var captor = ArgumentCaptor.forClass(StoryFilter.class);
+        verify(stories).search(captor.capture());
+        return captor.getValue();
+    }
+
+    @Test
+    void storiesFilterKommenImServiceAn() throws Exception {
+        mvc.perform(get("/stories").param("q", "  Armee  Budget ").param("sort", "quellen")
+                        .param("minSources", "3").param("hours", "48").header("HX-Request", "true"))
+                .andExpect(status().isOk());
+        var f = captureFilter();
+        assertEquals("Armee Budget", f.query());
+        assertEquals(StorySort.QUELLEN, f.sort());
+        assertEquals(3, f.minSources());
+        long stunden = java.time.Duration.between(f.from(), f.to()).toHours();
+        assertEquals(48, stunden);
+    }
+
+    @Test
+    void datumsbereichInSchweizerZeit() throws Exception {
+        mvc.perform(get("/stories").param("von", "2026-11-01").param("bis", "2026-11-02"))
+                .andExpect(status().isOk())
+                // im Formular steht jetzt «Datumsbereich» statt eines festen Zeitraums
+                .andExpect(content().string(containsString("<option value=\"0\" selected=\"selected\">Datumsbereich</option>")))
+                .andExpect(content().string(containsString("value=\"2026-11-01\"")));
+        var f = captureFilter();
+        // 1.11. 00:00 Zürich (Winterzeit, UTC+1) bis 3.11. 00:00 Zürich, also «bis» einschliesslich
+        assertEquals(java.time.Instant.parse("2026-10-31T23:00:00Z"), f.from().toInstant());
+        assertEquals(java.time.Instant.parse("2026-11-02T23:00:00Z"), f.to().toInstant());
+    }
+
+    @Test
+    void ohneSucheUndMitUnbekannterSortierung() throws Exception {
+        mvc.perform(get("/stories").param("q", "   ").param("sort", "quatsch")).andExpect(status().isOk());
+        var f = captureFilter();
+        assertNull(f.query());
+        assertEquals(StorySort.NEU, f.sort());
+        assertEquals(24, java.time.Duration.between(f.from(), f.to()).toHours());
+    }
+
+    @Test
+    void leeresSuchergebnisNenntDenBegriff() throws Exception {
+        when(stories.search(any())).thenReturn(List.of());
+        mvc.perform(get("/stories").param("q", "Fondue").header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Keine Stories mit «Fondue» in diesem Zeitraum.")));
+    }
+
+    @Test
+    void anzahlTreffer() throws Exception {
+        mvc.perform(get("/stories").header("HX-Request", "true"))
+                .andExpect(content().string(containsString("1 Story")));
+    }
+
+    @Test
+    void sortierungImFormular() throws Exception {
+        mvc.perform(get("/stories").param("sort", "artikel"))
+                .andExpect(content().string(containsString("<option value=\"artikel\" selected=\"selected\">Meiste Artikel</option>")));
     }
 
     @Test
