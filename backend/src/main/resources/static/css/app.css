@@ -17,7 +17,16 @@
 }
 
 .filters label {
-    flex: 1 1 12rem;
+    flex: 1 1 10rem;
+}
+
+/* Suchfeld über die ganze Breite der Filterzeile */
+.filters .search {
+    flex: 1 1 100%;
+}
+
+.count {
+    margin-bottom: 0.5rem;
 }
 
 /* Story-Liste */
