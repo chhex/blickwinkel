@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,8 @@ public class DeepLClient implements TranslationClient {
     private final RestClient rest;
     private final boolean configured;
 
+    /** Für Spring. Bei zwei Konstruktoren muss der zu verwendende markiert sein. */
+    @Autowired
     public DeepLClient(RestClient.Builder builder, BlickwinkelProperties props) {
         this(builder, props, true);
     }
