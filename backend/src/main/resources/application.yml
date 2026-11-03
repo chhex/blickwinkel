@@ -30,6 +30,11 @@ blickwinkel:
     similarity-threshold: 0.70  # kalibriert am 31.10.2026 mit echten Daten
     window: PT48H
     batch-size: 200
+  translation:
+    # Optional: ohne Schlüssel ist die Übersetzung aus (keine Knöpfe im UI)
+    deepl-api-key: ${DEEPL_API_KEY:}
+    deepl-base-url:           # leer = automatisch (":fx"-Schlüssel -> api-free.deepl.com)
+    target-languages: [de, en, es]
 
 logging:
   level:

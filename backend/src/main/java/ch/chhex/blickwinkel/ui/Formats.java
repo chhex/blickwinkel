@@ -1,5 +1,7 @@
 package ch.chhex.blickwinkel.ui;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -37,6 +39,18 @@ public class Formats {
                 ? DateTimeFormatter.ofPattern("HH:mm").format(b)
                 : TIME.format(b);
         return time(from) + " – " + end;
+    }
+
+    /** Ganze Zahl mit Schweizer Tausendertrennzeichen, z.B. «12'345». */
+    public String count(long value) {
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.ROOT);
+        symbols.setGroupingSeparator('\'');
+        return new DecimalFormat("#,##0", symbols).format(value);
+    }
+
+    /** Anteil in Prozent ohne Nachkommastellen, z.B. «3 %»; leer bei Gesamt 0. */
+    public String percent(long part, long total) {
+        return total <= 0 ? "" : Math.round(100.0 * part / total) + " %";
     }
 
     /** Ähnlichkeit mit zwei Nachkommastellen, leer bei null. */

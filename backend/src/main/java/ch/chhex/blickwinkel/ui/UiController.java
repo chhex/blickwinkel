@@ -1,10 +1,15 @@
 package ch.chhex.blickwinkel.ui;
 
+import java.util.List;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -12,6 +17,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import ch.chhex.blickwinkel.source.SourceStatusService;
 import ch.chhex.blickwinkel.story.StoryQueryService;
+import ch.chhex.blickwinkel.translation.TranslationException;
+import ch.chhex.blickwinkel.translation.TranslationService;
+import ch.chhex.blickwinkel.translation.TranslationService.Translation;
 
 /**
  * Serverseitiges UI mit Thymeleaf. Filter laufen über htmx: Kommt eine Anfrage von
@@ -21,17 +29,29 @@ import ch.chhex.blickwinkel.story.StoryQueryService;
 @Controller
 public class UiController {
 
+    private static final Logger log = LoggerFactory.getLogger(UiController.class);
     private static final String HX_REQUEST = "HX-Request";
+
+    /** Für die Templates: Übersetzung verfügbar, und in welche Sprachen. */
+    public record TranslationUi(boolean enabled, List<String> targets) {
+    }
 
     private final StoryQueryService stories;
     private final SourceStatusService status;
+    private final TranslationService translations;
     private final double threshold;
 
-    public UiController(StoryQueryService stories, SourceStatusService status,
+    public UiController(StoryQueryService stories, SourceStatusService status, TranslationService translations,
             @Value("${blickwinkel.clustering.similarity-threshold}") double threshold) {
         this.stories = stories;
         this.status = status;
+        this.translations = translations;
         this.threshold = threshold;
+    }
+
+    @ModelAttribute("translation")
+    public TranslationUi translation() {
+        return new TranslationUi(translations.isEnabled(), translations.targetLanguages());
     }
 
     @GetMapping("/")
@@ -58,6 +78,31 @@ public class UiController {
         return "story";
     }
 
+    /**
+     * Titel und Teaser eines Artikels als Fragment: ohne {@code lang} im Original,
+     * mit {@code lang} übersetzt (aus dem Cache oder frisch beim Anbieter).
+     * Fehler erscheinen im Fragment selbst, die Seite bleibt bedienbar.
+     */
+    @GetMapping("/articles/{id}/text")
+    public String articleText(@PathVariable long id, @RequestParam(required = false) String lang, Model model) {
+        var article = translations.article(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Artikel " + id + " gibt es nicht"));
+        Translation tr = null;
+        String err = null;
+        if (lang != null && !lang.isBlank()) {
+            try {
+                tr = translations.translate(article, lang);
+            } catch (TranslationException e) {
+                log.warn("Übersetzung von Artikel {} nach {} fehlgeschlagen: {}", id, lang, e.getMessage());
+                err = e.getMessage();
+            }
+        }
+        model.addAttribute("t", article);
+        model.addAttribute("tr", tr);
+        model.addAttribute("err", err);
+        return "article-text :: text";
+    }
+
     @GetMapping("/einzelmeldungen")
     public String singletons(
             @RequestParam(defaultValue = "24") int hours,
@@ -79,6 +124,8 @@ public class UiController {
     public String status(Model model) {
         model.addAttribute("pipeline", status.pipeline());
         model.addAttribute("feeds", status.feeds());
+        model.addAttribute("translationUsage",
+                translations.isEnabled() ? translations.usage().orElse(null) : null);
         return "status";
     }
 }

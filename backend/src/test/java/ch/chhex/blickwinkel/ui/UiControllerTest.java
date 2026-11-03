@@ -35,6 +35,11 @@ import ch.chhex.blickwinkel.story.StoryQueryService.Singleton;
 import ch.chhex.blickwinkel.story.StoryQueryService.StoryArticle;
 import ch.chhex.blickwinkel.story.StoryQueryService.StoryDetail;
 import ch.chhex.blickwinkel.story.StoryQueryService.StorySummary;
+import ch.chhex.blickwinkel.translation.TranslationClient.Usage;
+import ch.chhex.blickwinkel.translation.TranslationException;
+import ch.chhex.blickwinkel.translation.TranslationService;
+import ch.chhex.blickwinkel.translation.TranslationService.ArticleText;
+import ch.chhex.blickwinkel.translation.TranslationService.Translation;
 
 /**
  * Rendert alle Seiten mit Beispieldaten. Fängt Fehler in Templates und
@@ -58,6 +63,12 @@ class UiControllerTest {
     @MockitoBean
     SourceStatusService status;
 
+    @MockitoBean
+    TranslationService translations;
+
+    private static final ArticleText LE_TEMPS = new ArticleText(3, "https://letemps.ch/c",
+            "Le budget militaire augmente", "Le Conseil fédéral a décidé.", "fr");
+
     @BeforeEach
     void beispieldaten() {
         when(stories.recentStories(anyInt(), anyInt(), anyInt())).thenReturn(List.of(
@@ -67,11 +78,11 @@ class UiControllerTest {
         when(stories.story(anyLong())).thenReturn(Optional.empty());
         when(stories.story(505)).thenReturn(Optional.of(new StoryDetail(505, "Bundesrat erhöht Armeebudget",
                 T, T.plusHours(7), List.of(
-                        new StoryArticle("NZZ Meinung", "OPINION", "CH", "de", "Die Armee braucht mehr",
+                        new StoryArticle(1, "NZZ Meinung", "OPINION", "CH", "de", "Die Armee braucht mehr",
                                 "Ein Kommentar", "https://nzz.ch/a", T, 0.81f),
-                        new StoryArticle("SRF News", "NEWS", "CH", "de", "Mehr Geld für die Armee",
+                        new StoryArticle(2, "SRF News", "NEWS", "CH", "de", "Mehr Geld für die Armee",
                                 null, "https://srf.ch/b", null, null),
-                        new StoryArticle("Le Temps", "NEWS", "CH", "fr", "Le budget de l'armée augmente",
+                        new StoryArticle(3, "Le Temps", "NEWS", "CH", "fr", "Le budget de l'armée augmente",
                                 LANGER_TEASER, "https://letemps.ch/c", T, 0.74f)))));
 
         when(stories.singletons(anyInt(), any(), anyInt())).thenReturn(List.of(
@@ -88,6 +99,16 @@ class UiControllerTest {
                 new FeedStatus("nzz", "NZZ", "CH", "NEWS", "https://www.nzz.ch/recent.rss", T, null, 120, 16),
                 new FeedStatus("ft", "Financial Times", "GB", "NEWS", "https://www.ft.com/rss/home", null, "HTTP 403", 0, 0)));
         when(status.activeSources()).thenReturn(List.of(new SourceOption("nzz", "NZZ")));
+
+        when(translations.isEnabled()).thenReturn(true);
+        when(translations.targetLanguages()).thenReturn(List.of("de", "en", "es"));
+        when(translations.article(anyLong())).thenReturn(Optional.empty());
+        when(translations.article(3)).thenReturn(Optional.of(LE_TEMPS));
+        when(translations.translate(eq(LE_TEMPS), eq("de"))).thenReturn(new Translation("de",
+                "Das Armeebudget steigt", "Der Bundesrat hat entschieden.", "fr", "deepl"));
+        when(translations.translate(eq(LE_TEMPS), eq("es")))
+                .thenThrow(new TranslationException("Das DeepL-Kontingent für diesen Monat ist aufgebraucht."));
+        when(translations.usage()).thenReturn(Optional.of(new Usage(12345, 500000)));
     }
 
     @Test
@@ -154,6 +175,70 @@ class UiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(not(containsString("<html"))));
         org.mockito.Mockito.verify(stories).singletons(anyInt(), eq("nzz"), anyInt());
+    }
+
+    @Test
+    void storyDetailZeigtUebersetzungsKnoepfeOhneEigeneSprache() throws Exception {
+        mvc.perform(get("/stories/505"))
+                .andExpect(status().isOk())
+                // NZZ-Artikel (de): EN und ES angeboten, DE nicht
+                .andExpect(content().string(containsString("hx-get=\"/articles/1/text?lang=en\"")))
+                .andExpect(content().string(containsString("hx-get=\"/articles/1/text?lang=es\"")))
+                .andExpect(content().string(not(containsString("hx-get=\"/articles/1/text?lang=de\""))))
+                // Le-Temps-Artikel (fr): alle drei
+                .andExpect(content().string(containsString("hx-get=\"/articles/3/text?lang=de\"")));
+    }
+
+    @Test
+    void ohneSchluesselKeineKnoepfe() throws Exception {
+        when(translations.isEnabled()).thenReturn(false);
+        mvc.perform(get("/stories/505"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("/text?lang="))));
+    }
+
+    @Test
+    void uebersetzterTextAlsFragment() throws Exception {
+        mvc.perform(get("/articles/3/text").param("lang", "de").header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("<html"))))
+                .andExpect(content().string(containsString("Das Armeebudget steigt")))
+                .andExpect(content().string(containsString("Der Bundesrat hat entschieden.")))
+                .andExpect(content().string(containsString("übersetzt aus FR · DeepL ·")))
+                .andExpect(content().string(containsString(">Original<")))
+                // DE ist jetzt aktiv und wird nicht mehr angeboten, EN und ES schon
+                .andExpect(content().string(not(containsString("/articles/3/text?lang=de"))))
+                .andExpect(content().string(containsString("/articles/3/text?lang=en")));
+    }
+
+    @Test
+    void originalAlsFragment() throws Exception {
+        mvc.perform(get("/articles/3/text").header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Le budget militaire augmente")))
+                .andExpect(content().string(not(containsString("übersetzt"))));
+    }
+
+    @Test
+    void fehlerErscheintImFragment() throws Exception {
+        mvc.perform(get("/articles/3/text").param("lang", "es").header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Kontingent für diesen Monat ist aufgebraucht")))
+                .andExpect(content().string(containsString("Le budget militaire augmente")));
+    }
+
+    @Test
+    void unbekannterArtikel() throws Exception {
+        mvc.perform(get("/articles/99/text").param("lang", "de")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    void statusZeigtKontingent() throws Exception {
+        mvc.perform(get("/status"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("12'345")))
+                .andExpect(content().string(containsString("500'000")))
+                .andExpect(content().string(containsString("2 %")));
     }
 
     @Test

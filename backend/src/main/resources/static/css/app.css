@@ -83,6 +83,23 @@ details.teaser[open] .more {
     display: none;
 }
 
+/* Übersetzungs-Knöpfe unter Titel und Teaser */
+.translate {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+}
+
+.translate .lang {
+    margin-right: 0.6rem;
+    font-size: 0.8rem;
+}
+
+/* htmx markiert den angeklickten Link, solange die Anfrage läuft */
+.translate .lang.htmx-request {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
 /* Einzelmeldungen knapp unter dem Schwellwert */
 tr.near td,
 .near-sample {

@@ -44,7 +44,7 @@ public class StoryQueryService {
             int articleCount, List<String> sources) {
     }
 
-    public record StoryArticle(String source, String section, String country, String language,
+    public record StoryArticle(long id, String source, String section, String country, String language,
             String title, String teaser, String url, OffsetDateTime publishedAt, Float similarity) {
     }
 
@@ -102,8 +102,8 @@ public class StoryQueryService {
             """;
 
     private static final String SELECT_STORY_ARTICLES = """
-            select src.name as source_name, src.section::text as section, src.country, src.language,
-                   a.title, a.teaser, a.url, a.published_at, a.similarity
+            select a.id, src.name as source_name, src.section::text as section, src.country,
+                   trim(a.language) as language, a.title, a.teaser, a.url, a.published_at, a.similarity
             from article a
             join source src on src.id = a.source_id
             where a.story_id = :id
@@ -260,6 +260,7 @@ public class StoryQueryService {
         return jdbc.sql(SELECT_STORY_ARTICLES)
                 .param("id", storyId)
                 .query((rs, n) -> new StoryArticle(
+                        rs.getLong("id"),
                         rs.getString("source_name"),
                         rs.getString("section"),
                         rs.getString("country"),

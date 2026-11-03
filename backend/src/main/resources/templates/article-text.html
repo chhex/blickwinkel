@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Titel und Teaser eines Artikels, im Original oder übersetzt.
+  Erwartet im Kontext:
+    t           Artikel (id, url, title, teaser, language)
+    tr          Übersetzung oder null
+    err         Fehlermeldung oder null
+    translation Einstellungen (enabled, targets)
+  Wird im Story-Detail eingebunden und von /articles/{id}/text als Fragment
+  geliefert; htmx ersetzt damit genau diesen Block.
+-->
+<div th:fragment="text" class="article-text" th:id="${'text-' + t.id}"
+     th:with="title=${tr != null ? tr.title : t.title}, teaser=${tr != null ? tr.teaser : t.teaser}">
+
+    <a th:href="${t.url}" th:text="${title}" target="_blank" rel="noopener">Schlagzeile</a>
+
+    <th:block th:if="${teaser != null}">
+        <br>
+        <!-- Kurze Teaser ganz; lange aufklappbar (details, ohne JavaScript) -->
+        <small th:if="${#strings.length(teaser) <= 280}" class="muted" th:text="${teaser}">Teaser</small>
+        <details th:if="${#strings.length(teaser) > 280}" class="teaser">
+            <summary><small class="muted"><span th:text="${#strings.substring(teaser, 0, 280)}">Anfang</span><span class="more"> … mehr</span></small></summary>
+            <small class="muted" th:text="${#strings.substring(teaser, 280)}">Rest</small>
+        </details>
+    </th:block>
+
+    <p class="translate" th:if="${tr != null or translation.enabled or err != null}">
+        <th:block th:if="${tr != null}">
+            <small class="muted"
+                   th:text="${'übersetzt' + (tr.sourceLang != null ? ' aus ' + #strings.toUpperCase(tr.sourceLang) : '') + ' · ' + (tr.provider == 'deepl' ? 'DeepL' : tr.provider) + ' ·'}">übersetzt aus FR · DeepL ·</small>
+            <a href="#" class="lang" th:hx-get="@{/articles/{id}/text(id=${t.id})}"
+               hx-target="closest .article-text" hx-swap="outerHTML">Original</a>
+        </th:block>
+        <th:block th:if="${translation.enabled}">
+            <a th:each="l : ${translation.targets}"
+               th:unless="${l == t.language or (tr != null and l == tr.lang)}"
+               href="#" class="lang" th:title="${'Übersetzen nach ' + #strings.toUpperCase(l)}"
+               th:hx-get="@{/articles/{id}/text(id=${t.id},lang=${l})}"
+               hx-target="closest .article-text" hx-swap="outerHTML"
+               th:text="${#strings.toUpperCase(l)}">DE</a>
+        </th:block>
+        <small th:if="${err != null}" class="error-text" th:text="${err}">Fehler</small>
+    </p>
+</div>
+
+</body>
+</html>

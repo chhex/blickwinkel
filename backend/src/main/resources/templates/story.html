@@ -31,17 +31,9 @@
                     <small class="muted" th:text="${a.country} + ' · ' + ${a.language}">CH · de</small>
                     <span th:if="${a.section == 'OPINION'}" class="badge opinion">Meinung</span>
                 </td>
-                <td>
-                    <a th:href="${a.url}" th:text="${a.title}" target="_blank" rel="noopener">Schlagzeile</a>
-                    <th:block th:if="${a.teaser != null}">
-                        <br>
-                        <!-- Kurze Teaser ganz; lange aufklappbar (details, ohne JavaScript) -->
-                        <small th:if="${#strings.length(a.teaser) <= 280}" class="muted" th:text="${a.teaser}">Teaser</small>
-                        <details th:if="${#strings.length(a.teaser) > 280}" class="teaser">
-                            <summary><small class="muted"><span th:text="${#strings.substring(a.teaser, 0, 280)}">Anfang</span><span class="more"> … mehr</span></small></summary>
-                            <small class="muted" th:text="${#strings.substring(a.teaser, 280)}">Rest</small>
-                        </details>
-                    </th:block>
+                <!-- Titel, Teaser und Übersetzungs-Knöpfe: eigenes Fragment, damit htmx es austauschen kann -->
+                <td th:with="t=${a}, tr=${null}, err=${null}">
+                    <div th:replace="~{article-text :: text}"></div>
                 </td>
                 <td><small th:text="${@fmt.time(a.publishedAt)}">01.11. 16:33</small></td>
                 <td th:text="${@fmt.sim(a.similarity)}">0.75</td>
