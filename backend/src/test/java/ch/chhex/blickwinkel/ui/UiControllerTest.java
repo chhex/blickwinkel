@@ -84,12 +84,17 @@ class UiControllerTest {
         when(stories.story(anyLong())).thenReturn(Optional.empty());
         when(stories.story(505)).thenReturn(Optional.of(new StoryDetail(505, "Bundesrat erhöht Armeebudget",
                 T, T.plusHours(7), List.of(
-                        new StoryArticle(1, "NZZ Meinung", "OPINION", "CH", "de", "Die Armee braucht mehr",
-                                "Ein Kommentar", "https://nzz.ch/a", T, 0.81f),
-                        new StoryArticle(2, "SRF News", "NEWS", "CH", "de", "Mehr Geld für die Armee",
-                                null, "https://srf.ch/b", null, null),
-                        new StoryArticle(3, "Le Temps", "NEWS", "CH", "fr", "Le budget de l'armée augmente",
-                                LANGER_TEASER, "https://letemps.ch/c", T, 0.74f)))));
+                        // in Erscheinungsreihenfolge, wie sie die Abfrage liefert
+                        new StoryArticle(1, "nzz-meinung", "NZZ Meinung", "OPINION", "CH", "de",
+                                "Die Armee braucht mehr", "Ein Kommentar", "https://nzz.ch/a", T, 0.81f),
+                        new StoryArticle(2, "srf", "SRF News", "NEWS", "CH", "de", "Mehr Geld für die Armee",
+                                null, "https://srf.ch/b", T.plusHours(1), null),
+                        new StoryArticle(3, "letemps", "Le Temps", "NEWS", "CH", "fr",
+                                "Le budget de l'armée augmente", LANGER_TEASER, "https://letemps.ch/c",
+                                T.plusHours(2), 0.74f),
+                        new StoryArticle(4, "guardian", "The Guardian", "NEWS", "GB", "en",
+                                "Swiss raise defence spending", null, "https://theguardian.com/d",
+                                T.plusHours(3), 0.72f)))));
 
         when(stories.singletons(anyInt(), any(), anyInt())).thenReturn(List.of(
                 new Singleton(1, "NZZ", "Knapp verpasst", "https://nzz.ch/c", T, 505L, "Bundesrat erhöht Armeebudget", 0.68),
@@ -220,6 +225,63 @@ class UiControllerTest {
                 .andExpect(content().string(containsString("ENDE-DES-TEASERS")))
                 // kurzer Teaser bleibt ohne Aufklappen
                 .andExpect(content().string(containsString(">Ein Kommentar<")));
+    }
+
+    @Test
+    void storyDetailZeigtFilterUndMarkiertErstenArtikel() throws Exception {
+        String html = mvc.perform(get("/stories/505"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("name=\"quelle\" value=\"guardian\"")))
+                .andExpect(content().string(containsString("name=\"sprache\" value=\"fr\"")))
+                .andExpect(content().string(containsString("name=\"land\" value=\"GB\"")))
+                .andExpect(content().string(containsString(">zuerst<")))
+                .andExpect(content().string(containsString("class=\"badge land\"")))
+                // ohne Filter keine Zeile «x von y»
+                .andExpect(content().string(not(containsString("von 4 Artikeln"))))
+                .andReturn().getResponse().getContentAsString();
+        // Reihenfolge der Abfrage bleibt erhalten
+        int nzz = html.indexOf("Die Armee braucht mehr");
+        int guardian = html.indexOf("Swiss raise defence spending");
+        assertEquals(true, nzz > 0 && guardian > nzz, "NZZ vor Guardian");
+    }
+
+    @Test
+    void storyDetailFiltertNachQuelle() throws Exception {
+        mvc.perform(get("/stories/505").param("quelle", "srf").param("quelle", "guardian"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Mehr Geld für die Armee")))
+                .andExpect(content().string(containsString("Swiss raise defence spending")))
+                .andExpect(content().string(not(containsString("Le budget de l&#39;armée augmente"))))
+                .andExpect(content().string(containsString("2 von 4 Artikeln")))
+                // Auswahl bleibt angekreuzt, «zuerst» bleibt beim ältesten Artikel der ganzen Story
+                .andExpect(content().string(containsString("value=\"srf\" checked")))
+                .andExpect(content().string(not(containsString(">zuerst<"))));
+    }
+
+    @Test
+    void storyDetailFilterKombiniertSpracheUndLand() throws Exception {
+        mvc.perform(get("/stories/505").param("sprache", "DE").param("land", "ch"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("2 von 4 Artikeln")))
+                .andExpect(content().string(not(containsString("Swiss raise defence spending"))));
+    }
+
+    @Test
+    void storyDetailFilterOhneTreffer() throws Exception {
+        mvc.perform(get("/stories/505").param("quelle", "gibtsnicht"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Keine Artikel für diese Auswahl.")))
+                .andExpect(content().string(containsString("alle anzeigen")));
+    }
+
+    @Test
+    void storyDetailNurTabelleFuerHtmx() throws Exception {
+        mvc.perform(get("/stories/505").param("land", "GB").header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("id=\"articles\"")))
+                .andExpect(content().string(containsString("Swiss raise defence spending")))
+                .andExpect(content().string(not(containsString("<html"))))
+                .andExpect(content().string(not(containsString("<legend>Quelle</legend>"))));
     }
 
     @Test

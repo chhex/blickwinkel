@@ -58,7 +58,7 @@ curl 'http://localhost:8080/api/stories?hours=24&minSources=2' | jq
 | Seite | Inhalt |
 |---|---|
 | `/stories` | Stories mit Quellen-Badges; Suche, Zeitraum oder Datumsbereich, Mindestanzahl Quellen, Sortierung |
-| `/stories/{id}` | alle Schlagzeilen einer Story nebeneinander, Meinungsbeiträge markiert |
+| `/stories/{id}` | alle Artikel einer Story in der Reihenfolge ihres Erscheinens, der erste als «zuerst» markiert; Filter nach Quelle, Sprache und Land |
 | `/einzelmeldungen` | Artikel ohne zweite Quelle, mit der ähnlichsten fremden Story. Markiert sind Fälle knapp unter dem Schwellwert: das Werkzeug zum Kalibrieren |
 | `/status` | Pipeline-Zähler und Zustand jedes Feeds |
 
@@ -70,6 +70,12 @@ im selben Artikel vorkommen. Eine Story erscheint, wenn mindestens einer ihrer A
 passt. Technisch: Trigramm-Index (`pg_trgm`) auf einem normalisierten Ausdruck
 (`V4__search.sql`), bewusst ohne sprachabhängiges Stemming, weil vier Sprachen gemischt
 sind und deutsche Komposita sonst nicht gefunden würden.
+
+**Story-Detail:** Die Artikel stehen in zeitlicher Reihenfolge (Erscheinungszeit laut Feed,
+ersatzweise Abrufzeit). So sieht man, wer zuerst berichtet hat und wer nachzieht. Die Filter
+zeigen nur, was in der Story vorkommt, mit Anzahl Artikel. Angekreuzt heisst «nur diese»;
+innerhalb eines Merkmals gilt oder, zwischen Quelle, Sprache und Land und. Die Auswahl steht
+in der URL (z.B. `/stories/42?land=CH&land=DE`).
 
 **Zeitraum:** entweder «die letzten N Stunden» oder ein Datumsbereich (Schweizer Zeit,
 «bis» einschliesslich). Eine Story zählt, wenn sich ihr Zeitraum mit dem gewählten
@@ -92,8 +98,9 @@ Den Verbrauch des DeepL-Kontingents zeigt die Statusseite.
 `HX-Request` und rendert dann nur das Thymeleaf-Fragment statt der ganzen Seite.
 Die Abfragen liegen in `StoryQueryService` und werden auch von der REST-API benutzt.
 
-Kein Login: Das UI ist für das Heimnetz gedacht. Vor einer Freigabe nach aussen
-braucht es einen Zugangsschutz.
+Zugang von aussen über Cloudflare Tunnel mit Cloudflare Access (Login), die App selbst hat
+keinen Login. Sie lauscht nur auf `127.0.0.1:8080` und wertet die `X-Forwarded-*`-Header aus
+(`server.forward-headers-strategy`), damit Weiterleitungen bei https bleiben.
 
 **Mac-Hinweis:** Ollama in Docker läuft auf dem Mac ohne GPU. Für Embeddings
 reicht das, schneller ist die native Ollama-App. Dann den `ollama`-Service in
@@ -126,8 +133,8 @@ gebaut wird im Container (`Dockerfile`, mehrstufig).
 Solange ein Self-hosted Runner dranhängt, nie `pull_request` ergänzen.
 Das ist besonders wichtig, falls das Repo später öffentlich wird.
 
-**Ports:** Postgres und Ollama sind nur auf `127.0.0.1` gebunden, aus dem LAN
-erreichbar ist nur die App auf Port 8080.
+**Ports:** Postgres, Ollama und die App sind nur auf `127.0.0.1` gebunden. Von aussen
+kommt man nur über den Cloudflare Tunnel an die App, offene Ports gibt es keine.
 
 ## Clustering
 

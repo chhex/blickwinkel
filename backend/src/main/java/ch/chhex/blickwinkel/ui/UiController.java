@@ -89,11 +89,30 @@ public class UiController {
         return htmx != null ? "stories :: list" : "stories";
     }
 
+    /**
+     * Story-Detail. Die Artikel kommen in der Reihenfolge ihres Erscheinens; der älteste
+     * ist als «zuerst» markiert. Die Filter wirken nur auf die Tabelle: Die Auswahl der
+     * Quellen, Sprachen und Länder zeigt immer alles, was in der Story vorkommt.
+     */
     @GetMapping("/stories/{id}")
-    public String story(@PathVariable long id, Model model) {
-        model.addAttribute("story", stories.story(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Story " + id + " gibt es nicht")));
-        return "story";
+    public String story(@PathVariable long id,
+            @RequestParam(required = false) List<String> quelle,
+            @RequestParam(required = false) List<String> sprache,
+            @RequestParam(required = false) List<String> land,
+            @RequestHeader(value = HX_REQUEST, required = false) String htmx,
+            Model model) {
+        var story = stories.story(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Story " + id + " gibt es nicht"));
+        var all = story.articles();
+        var filter = ArticleFilter.of(quelle, sprache, land);
+
+        model.addAttribute("story", story);
+        model.addAttribute("filter", filter);
+        model.addAttribute("facets", ArticleFilter.facets(all));
+        model.addAttribute("articles", filter.apply(all));
+        model.addAttribute("total", all.size());
+        model.addAttribute("firstId", all.size() > 1 ? all.get(0).id() : null);
+        return htmx != null ? "story :: articles" : "story";
     }
 
     /**
