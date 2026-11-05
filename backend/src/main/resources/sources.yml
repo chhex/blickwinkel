@@ -279,24 +279,6 @@ blickwinkel:
       note: "nimmt Geld von verschiedenen Parteien, tendenziell käuflich"
       feed-urls:
         - https://elnuevodiario.com.do/feed/
-    - code: hoy
-      name: Hoy
-      country: DO
-      language: es
-      section: NEWS
-      ownership: parteien
-      lean: keine
-      note: "nimmt Geld von verschiedenen Parteien, tendenziell käuflich"
-      feed-urls:
-        - https://hoy.com.do/feed/
-    - code: ndigital
-      name: N Digital
-      country: DO
-      language: es
-      section: NEWS
-      ownership: privat
-      feed-urls:
-        - https://n.com.do/feed/
     - code: dominicantoday
       name: Dominican Today
       country: DO
@@ -317,25 +299,6 @@ blickwinkel:
       lean: mitte-rechts
       feed-urls:
         - https://www.infobae.com/arc/outboundfeeds/rss/
-    - code: lanacion-ar
-      name: La Nación
-      country: AR
-      language: es
-      section: NEWS
-      ownership: privat
-      lean: mitte-rechts
-      feed-urls:
-        - https://www.lanacion.com.ar/arc/outboundfeeds/rss/
-    - code: clarin
-      name: Clarín
-      country: AR
-      language: es
-      section: NEWS
-      ownership: privat
-      lean: mitte
-      note: "Grupo Clarín; nur Ressort Mundo"
-      feed-urls:
-        - https://www.clarin.com/rss/mundo/
     - code: eltiempo
       name: El Tiempo
       country: CO
@@ -356,34 +319,6 @@ blickwinkel:
       note: "regierungsnah, viel staatliche Werbung"
       feed-urls:
         - https://www.jornada.com.mx/rss/edicion.xml?v=1
-    - code: expansion
-      name: Expansión
-      country: MX
-      language: es
-      section: NEWS
-      ownership: privat
-      lean: mitte
-      note: "Wirtschaft"
-      feed-urls:
-        - https://expansion.mx/rss
-    - code: rpp
-      name: RPP
-      country: PE
-      language: es
-      section: NEWS
-      ownership: privat
-      lean: mitte
-      feed-urls:
-        - https://rpp.pe/rss
-    - code: prensalibre
-      name: Prensa Libre
-      country: GT
-      language: es
-      section: NEWS
-      ownership: privat
-      lean: mitte-rechts
-      feed-urls:
-        - https://www.prensalibre.com/feed/
     - code: bbcmundo
       name: BBC Mundo
       country: GB
@@ -394,16 +329,6 @@ blickwinkel:
       note: "Rundfunkgebühr, Royal Charter"
       feed-urls:
         - https://feeds.bbci.co.uk/mundo/rss.xml
-    - code: france24-es
-      name: France 24 Español
-      country: FR
-      language: es
-      section: NEWS
-      ownership: oeffentlich
-      lean: mitte
-      note: "staatlich finanziert (France Médias Monde), mit Unabhängigkeitsstatut"
-      feed-urls:
-        - https://www.france24.com/es/rss
 
     # --- Staatsmedien als markierter Kontrast ---
     # teleSUR: Feed liefert keine Einträge (geprüft 5.11.2026), weggelassen.
