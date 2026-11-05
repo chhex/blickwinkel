@@ -65,6 +65,45 @@
     color: var(--pico-mark-color);
 }
 
+/* Land der Quelle als Kürzel, z.B. CH */
+.badge.land {
+    font-family: var(--pico-font-family-monospace);
+    letter-spacing: 0.05em;
+}
+
+/* Erster Artikel einer Story */
+.badge.first {
+    background: var(--pico-primary-background);
+    color: var(--pico-primary-inverse);
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+/* Filter im Story-Detail: Gruppen nebeneinander, Kästchen fliessen innerhalb */
+.facets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 2rem;
+    margin-bottom: 1rem;
+}
+
+.facets fieldset {
+    margin-bottom: 0.5rem;
+}
+
+.facets legend {
+    font-size: 0.875rem;
+    color: var(--pico-muted-color);
+}
+
+.facets label {
+    display: inline-block;
+    margin: 0 1rem 0.25rem 0;
+    font-size: 0.9rem;
+}
+
 /* Aufklappbarer Teaser: liest sich wie Fliesstext, ohne Pico-Rahmen und Pfeil */
 details.teaser {
     display: inline;

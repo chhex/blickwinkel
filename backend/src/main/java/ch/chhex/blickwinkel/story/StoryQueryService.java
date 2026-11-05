@@ -44,8 +44,13 @@ public class StoryQueryService {
             int articleCount, List<String> sources) {
     }
 
-    public record StoryArticle(long id, String source, String section, String country, String language,
-            String title, String teaser, String url, OffsetDateTime publishedAt, Float similarity) {
+    /**
+     * Ein Artikel im Story-Detail. {@code publishedAt} ist die Erscheinungszeit laut Feed,
+     * ersatzweise der Abrufzeitpunkt, damit jeder Artikel einen Platz in der Zeitfolge hat.
+     */
+    public record StoryArticle(long id, String sourceCode, String source, String section, String country,
+            String language, String title, String teaser, String url, OffsetDateTime publishedAt,
+            Float similarity) {
     }
 
     public record StoryDetail(long id, String title, OffsetDateTime firstSeenAt, OffsetDateTime lastSeenAt,
@@ -122,13 +127,15 @@ public class StoryQueryService {
             where st.id = :id
             """;
 
+    /** Artikel einer Story in der Reihenfolge ihres Erscheinens: wer zuerst berichtet hat, steht oben. */
     private static final String SELECT_STORY_ARTICLES = """
-            select a.id, src.name as source_name, src.section::text as section, src.country,
-                   trim(a.language) as language, a.title, a.teaser, a.url, a.published_at, a.similarity
+            select a.id, src.code as source_code, src.name as source_name, src.section::text as section,
+                   src.country, trim(a.language) as language, a.title, a.teaser, a.url,
+                   coalesce(a.published_at, a.fetched_at) as article_time, a.similarity
             from article a
             join source src on src.id = a.source_id
             where a.story_id = :id
-            order by src.country, src.name, a.published_at, a.id
+            order by article_time, a.id
             """;
 
     /**
@@ -284,6 +291,7 @@ public class StoryQueryService {
                 .param("id", storyId)
                 .query((rs, n) -> new StoryArticle(
                         rs.getLong("id"),
+                        rs.getString("source_code"),
                         rs.getString("source_name"),
                         rs.getString("section"),
                         rs.getString("country"),
@@ -291,7 +299,7 @@ public class StoryQueryService {
                         rs.getString("title"),
                         rs.getString("teaser"),
                         rs.getString("url"),
-                        rs.getObject("published_at", OffsetDateTime.class),
+                        rs.getObject("article_time", OffsetDateTime.class),
                         nullableFloat(rs, "similarity")))
                 .list();
     }
