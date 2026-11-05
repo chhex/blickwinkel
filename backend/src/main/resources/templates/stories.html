@@ -70,7 +70,7 @@
             <p class="badges">
                 <!-- th:each auf eigenem Element: th:insert hätte sonst Vorrang und c wäre noch leer -->
                 <th:block th:each="c : ${s.sources}">
-                    <span class="source-chip" th:insert="~{fragments/source :: badge(${catalog.of(c)}, true, false)}">NZZ</span>
+                    <span class="source-chip" th:insert="~{fragments/source :: badge(${catalog.of(c)}, true, 'dots')}">NZZ</span>
                 </th:block>
             </p>
         </article>

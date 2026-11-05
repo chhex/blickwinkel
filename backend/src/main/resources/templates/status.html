@@ -54,7 +54,7 @@
                 <td>
                     <strong th:text="${f.name}">NZZ</strong>
                     <span th:if="${f.section == 'OPINION'}" class="badge opinion">Meinung</span><br>
-                    <span th:replace="~{fragments/source :: badge(${catalog.of(f.code)}, false, false)}">CH ◐ ○○○●○ M-R</span>
+                    <span th:replace="~{fragments/source :: badge(${catalog.of(f.code)}, false, 'text')}">CH ◐ ○○○●○ M-R</span>
                 </td>
                 <td>
                     <small><a th:href="${f.url}" th:text="${f.url}" target="_blank" rel="noopener">URL</a></small>

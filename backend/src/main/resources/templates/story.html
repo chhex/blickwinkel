@@ -75,7 +75,7 @@
                     </td>
                     <td th:with="src=${catalog.of(a.sourceCode)}">
                         <strong th:text="${a.source}">NZZ</strong><br>
-                        <span th:replace="~{fragments/source :: badge(${src}, false, true)}">CH ◐ L ○○○●○ R mitte-rechts</span>
+                        <span th:replace="~{fragments/source :: badge(${src}, false, 'full')}">CH ◐ L ○○○●○ R mitte-rechts</span>
                         <small class="muted" th:text="${a.language}">de</small>
                         <span th:if="${a.section == 'OPINION'}" class="badge opinion">Meinung</span>
                     </td>
