@@ -24,7 +24,7 @@ public class SourceCatalog {
     public record Snapshot(Map<String, SourceInfo> byCode) {
 
         public SourceInfo of(String code) {
-            SourceInfo s = byCode.get(code);
+            SourceInfo s = code == null ? null : byCode.get(code);
             return s != null ? s : SourceInfo.unknown(code);
         }
     }
