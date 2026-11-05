@@ -167,6 +167,7 @@ public class UiController {
     public String status(Model model) {
         model.addAttribute("pipeline", status.pipeline());
         model.addAttribute("feeds", status.feeds());
+        model.addAttribute("catalog", catalog.snapshot());
         model.addAttribute("translationUsage",
                 translations.isEnabled() ? translations.usage().orElse(null) : null);
         return "status";

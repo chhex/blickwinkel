@@ -3,20 +3,31 @@
 <body>
 
 <!--
-  Quelle mit Einordnung, für Übersicht und Detail.
-  Erwartet: src (SourceInfo), showName (true: Name anzeigen).
-  Land als Kürzel, Finanzierung als Zeichen (nur wenn nicht privat), Ausrichtung als
-  Punkt auf einer neutralen Skala links → rechts (bewusst ohne Parteifarben).
-  Alles Weitere steht im Tooltip.
+  Quelle mit Einordnung, für Übersicht, Detail und Status.
+  Erwartet: src (SourceInfo), showName (Name anzeigen), full (ausführliche Skala).
+
+  kompakt (Übersicht, Status):  CH  NZZ  ◐  ○○○●○ M-R
+  ausführlich (Detail):         CH  ◐  L ○○○●○ R  mitte-rechts
+
+  Land als Kürzel, Finanzierung als Zeichen (nur wenn nicht privat), Ausrichtung als Punkt
+  auf einer neutralen Skala links → rechts (bewusst ohne Parteifarben) plus Text, damit sie
+  auch ohne Hover (Handy) lesbar ist. Ohne Richtung: «–». Nicht eingeordnet: nichts.
+  Alles Weitere (Herkunft der Einordnung, Notiz) steht im Tooltip.
 -->
-<span th:fragment="badge(src, showName)" class="source" th:title="${src.tooltip()}">
+<span th:fragment="badge(src, showName, full)" class="source" th:classappend="${full} ? 'full'"
+      th:title="${src.tooltip()}">
     <span class="badge land" th:if="${src.country != null}" th:text="${src.country}">CH</span>
     <span class="source-name" th:if="${showName}" th:text="${src.name}">NZZ</span>
     <span class="own" th:unless="${#strings.isEmpty(src.ownership.icon())}"
           th:text="${src.ownership.icon()}" th:attr="aria-label=${src.ownership.label()}">🏛</span>
-    <span class="lean-scale" th:if="${src.leanPosition() != null}"
-          th:attr="aria-label=${'Ausrichtung ' + src.lean.label()}"><i
-            th:each="p : ${ {-2, -1, 0, 1, 2} }" th:classappend="${p == src.leanPosition()} ? 'on'"></i></span>
+    <span class="lean" th:if="${src.lean != null}" th:attr="aria-label=${'Ausrichtung ' + src.lean.label()}">
+        <th:block th:if="${src.leanPosition() != null}">
+            <small class="lean-end" th:if="${full}">L</small><span class="lean-scale" aria-hidden="true"><i
+                th:each="p : ${ {-2, -1, 0, 1, 2} }" th:classappend="${p == src.leanPosition()} ? 'on'"></i></span><small
+                class="lean-end" th:if="${full}">R</small>
+        </th:block>
+        <small class="lean-text" th:text="${full ? src.lean.label() : src.lean.shortLabel()}">M-R</small>
+    </span>
 </span>
 
 </body>

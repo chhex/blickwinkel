@@ -153,7 +153,8 @@ class UiControllerTest {
                 .andExpect(content().string(containsString("<html")))
                 .andExpect(content().string(containsString("Bundesrat erhöht Armeebudget")))
                 .andExpect(content().string(containsString("3 Quellen · 4 Artikel · 01.11. 16:33 – 23:33")))
-                .andExpect(content().string(containsString("/vendor/htmx-2.0.11.min.js")));
+                // mit Cache-Busting steht ein Hash vor .js, deshalb nur der Anfang
+                .andExpect(content().string(containsString("/vendor/htmx-2.0.11.min")));
     }
 
     private StoryFilter captureFilter() {
@@ -314,6 +315,9 @@ class UiControllerTest {
                 .andExpect(content().string(containsString(
                         "title=\"SRF News · CH · öffentlich finanziert · Ausrichtung: mitte-links (eigene Einschätzung) · Gebühren (Serafe)\"")))
                 .andExpect(content().string(containsString("class=\"on\"")))
+                // Ausrichtung auch ohne Hover lesbar: Kürzel
+                .andExpect(content().string(containsString("class=\"lean-text\">M-L<")))
+                .andExpect(content().string(containsString("class=\"lean-text\">M-R<")))
                 // nicht im Katalog: Code als Name, ohne Skala
                 .andExpect(content().string(containsString(">watson<")))
                 .andExpect(content().string(containsString("watson · privat · Ausrichtung: nicht eingeordnet")));
@@ -324,7 +328,18 @@ class UiControllerTest {
         mvc.perform(get("/stories/505"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(
-                        "The Guardian · GB · privat · Ausrichtung: mitte-links (AllSides)")));
+                        "The Guardian · GB · privat · Ausrichtung: mitte-links (AllSides)")))
+                // ausführlich: Skala mit Enden und ausgeschriebenem Wort
+                .andExpect(content().string(containsString("class=\"lean-end\">L<")))
+                .andExpect(content().string(containsString("class=\"lean-text\">mitte-links<")));
+    }
+
+    @Test
+    void statusZeigtEinordnungJeFeed() throws Exception {
+        mvc.perform(get("/status"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("NZZ · CH · privat · Ausrichtung: mitte-rechts")))
+                .andExpect(content().string(containsString("class=\"lean-text\">M-R<")));
     }
 
     @Test

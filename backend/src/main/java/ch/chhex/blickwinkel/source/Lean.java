@@ -8,19 +8,26 @@ import java.util.Locale;
  */
 public enum Lean {
 
-    LINKS(-2, "links"),
-    MITTE_LINKS(-1, "mitte-links"),
-    MITTE(0, "mitte"),
-    MITTE_RECHTS(1, "mitte-rechts"),
-    RECHTS(2, "rechts"),
-    KEINE(null, "keine Richtung");
+    LINKS(-2, "links", "L"),
+    MITTE_LINKS(-1, "mitte-links", "M-L"),
+    MITTE(0, "mitte", "M"),
+    MITTE_RECHTS(1, "mitte-rechts", "M-R"),
+    RECHTS(2, "rechts", "R"),
+    KEINE(null, "keine Richtung", "–");
 
     private final Integer position;
     private final String label;
+    private final String shortLabel;
 
-    Lean(Integer position, String label) {
+    Lean(Integer position, String label, String shortLabel) {
         this.position = position;
         this.label = label;
+        this.shortLabel = shortLabel;
+    }
+
+    /** Kürzel für enge Stellen, z.B. «M-L»; «–» bei keiner Richtung. */
+    public String shortLabel() {
+        return shortLabel;
     }
 
     /** -2 (links) bis 2 (rechts); null bei {@link #KEINE}. */

@@ -12,6 +12,20 @@ spring:
     url: jdbc:postgresql://${DB_HOST:localhost}:5432/${POSTGRES_DB}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+  web:
+    resources:
+      # Cache-Busting: Spring hängt einen Inhalts-Hash an CSS/JS (app-3f2a9c….css), Thymeleaf
+      # schreibt die Links in @{...} automatisch um. Jede Änderung ergibt eine neue URL, kein
+      # Cache (Browser, Cloudflare) kann Veraltetes liefern, und alte URLs dürfen lange gelten.
+      chain:
+        strategy:
+          content:
+            enabled: true
+            paths: /**
+      cache:
+        cachecontrol:
+          max-age: 365d
+          cache-public: true
 
 server:
   # Hinter Cloudflare: X-Forwarded-Proto/Host auswerten, damit Weiterleitungen https behalten.

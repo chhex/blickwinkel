@@ -94,29 +94,53 @@
 
 .source .own {
     margin-left: 0.15rem;
+    font-size: 1.15em;
 }
 
-/* Fünf Punkte links → rechts, der zutreffende gefüllt. Neutral, ohne Parteifarben. */
+/* Ausrichtung: fünf Punkte links → rechts, der zutreffende gefüllt, dazu Kürzel oder Wort.
+   Neutral, ohne Parteifarben. */
+.lean {
+    margin-left: 0.35rem;
+    white-space: nowrap;
+}
+
 .lean-scale {
     display: inline-flex;
-    gap: 2px;
-    margin-left: 0.3rem;
+    align-items: center;
+    gap: 3px;
     vertical-align: middle;
 }
 
 .lean-scale i {
-    width: 5px;
-    height: 5px;
+    display: block;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
-    border: 1px solid var(--pico-muted-color);
+    border: 1.5px solid var(--pico-muted-color);
 }
 
 .lean-scale i.on {
-    width: 7px;
-    height: 7px;
-    margin-top: -1px;
+    width: 10px;
+    height: 10px;
     background: var(--pico-color);
     border-color: var(--pico-color);
+}
+
+.lean-text {
+    margin-left: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.source.full .lean-end {
+    margin: 0 0.25rem;
+    font-size: 0.7rem;
+    color: var(--pico-muted-color);
+}
+
+.source.full .lean-text {
+    font-weight: 400;
+    color: var(--pico-muted-color);
 }
 
 /* Erster Artikel einer Story */
