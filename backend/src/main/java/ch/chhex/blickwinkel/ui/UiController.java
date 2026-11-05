@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import ch.chhex.blickwinkel.source.SourceCatalog;
 import ch.chhex.blickwinkel.source.SourceStatusService;
 import ch.chhex.blickwinkel.story.StoryQueryService;
 import ch.chhex.blickwinkel.story.StorySort;
@@ -43,13 +44,16 @@ public class UiController {
 
     private final StoryQueryService stories;
     private final SourceStatusService status;
+    private final SourceCatalog catalog;
     private final TranslationService translations;
     private final double threshold;
 
-    public UiController(StoryQueryService stories, SourceStatusService status, TranslationService translations,
+    public UiController(StoryQueryService stories, SourceStatusService status, SourceCatalog catalog,
+            TranslationService translations,
             @Value("${blickwinkel.clustering.similarity-threshold}") double threshold) {
         this.stories = stories;
         this.status = status;
+        this.catalog = catalog;
         this.translations = translations;
         this.threshold = threshold;
     }
@@ -86,6 +90,7 @@ public class UiController {
         model.addAttribute("sorts", StorySort.values());
         model.addAttribute("limit", StoryListParams.LIMIT);
         model.addAttribute("stories", list);
+        model.addAttribute("catalog", catalog.snapshot());
         return htmx != null ? "stories :: list" : "stories";
     }
 
@@ -112,6 +117,7 @@ public class UiController {
         model.addAttribute("articles", filter.apply(all));
         model.addAttribute("total", all.size());
         model.addAttribute("firstId", all.size() > 1 ? all.get(0).id() : null);
+        model.addAttribute("catalog", catalog.snapshot());
         return htmx != null ? "story :: articles" : "story";
     }
 

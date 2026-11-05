@@ -71,6 +71,54 @@
     letter-spacing: 0.05em;
 }
 
+/* Quelle mit Einordnung: Land, Finanzierung, Ausrichtung */
+.source-chip {
+    display: inline-block;
+    margin: 0 0.4rem 0.3rem 0;
+    padding: 0.1rem 0.5rem;
+    border-radius: 0.5rem;
+    font-size: 0.75rem;
+    background: var(--pico-muted-border-color);
+}
+
+.source-chip .badge.land {
+    margin: 0 0.15rem 0 0;
+    padding: 0 0.25rem;
+    background: var(--pico-background-color);
+}
+
+.source {
+    cursor: help;
+    white-space: nowrap;
+}
+
+.source .own {
+    margin-left: 0.15rem;
+}
+
+/* Fünf Punkte links → rechts, der zutreffende gefüllt. Neutral, ohne Parteifarben. */
+.lean-scale {
+    display: inline-flex;
+    gap: 2px;
+    margin-left: 0.3rem;
+    vertical-align: middle;
+}
+
+.lean-scale i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    border: 1px solid var(--pico-muted-color);
+}
+
+.lean-scale i.on {
+    width: 7px;
+    height: 7px;
+    margin-top: -1px;
+    background: var(--pico-color);
+    border-color: var(--pico-color);
+}
+
 /* Erster Artikel einer Story */
 .badge.first {
     background: var(--pico-primary-background);

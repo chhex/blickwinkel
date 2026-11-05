@@ -24,6 +24,10 @@ erDiagram
         char language "de, fr, ..."
         source_section section "NEWS oder OPINION"
         text camp "eigenes Lager-Tag, optional"
+        source_ownership ownership "PRIVAT, OEFFENTLICH, STAATLICH, PARTEIEN"
+        source_lean lean "LINKS bis RECHTS, KEINE; null = nicht eingeordnet"
+        text lean_source "ALLSIDES oder EIGENE"
+        text note "Freitext für den Tooltip"
         boolean active
     }
 

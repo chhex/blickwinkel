@@ -67,7 +67,10 @@
                th:text="${s.sources.size()} + ' Quellen · ' + ${s.articleCount} + ' Artikel · ' + ${@fmt.span(s.firstSeenAt, s.lastSeenAt)}">
                 3 Quellen · 4 Artikel · 01.11. 16:33 – 23:35
             </p>
-            <p class="badges"><span class="badge" th:each="n : ${s.sources}" th:text="${n}">NZZ</span></p>
+            <p class="badges">
+                <span class="source-chip" th:each="c : ${s.sources}"
+                      th:insert="~{fragments/source :: badge(${catalog.of(c)}, true)}">NZZ</span>
+            </p>
         </article>
     </section>
 </main>

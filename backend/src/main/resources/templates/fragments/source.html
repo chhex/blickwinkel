@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+  Quelle mit Einordnung, für Übersicht und Detail.
+  Erwartet: src (SourceInfo), showName (true: Name anzeigen).
+  Land als Kürzel, Finanzierung als Zeichen (nur wenn nicht privat), Ausrichtung als
+  Punkt auf einer neutralen Skala links → rechts (bewusst ohne Parteifarben).
+  Alles Weitere steht im Tooltip.
+-->
+<span th:fragment="badge(src, showName)" class="source" th:title="${src.tooltip()}">
+    <span class="badge land" th:if="${src.country != null}" th:text="${src.country}">CH</span>
+    <span class="source-name" th:if="${showName}" th:text="${src.name}">NZZ</span>
+    <span class="own" th:unless="${#strings.isEmpty(src.ownership.icon())}"
+          th:text="${src.ownership.icon()}" th:attr="aria-label=${src.ownership.label()}">🏛</span>
+    <span class="lean-scale" th:if="${src.leanPosition() != null}"
+          th:attr="aria-label=${'Ausrichtung ' + src.lean.label()}"><i
+            th:each="p : ${ {-2, -1, 0, 1, 2} }" th:classappend="${p == src.leanPosition()} ? 'on'"></i></span>
+</span>
+
+</body>
+</html>

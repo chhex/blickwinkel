@@ -40,6 +40,7 @@ public class StoryQueryService {
 
     // --- Records für das UI ---------------------------------------------------------
 
+    /** {@code sources}: Codes der beteiligten Quellen, nach Name sortiert (Anzeige über den Quellenkatalog). */
     public record StorySummary(long id, String title, OffsetDateTime firstSeenAt, OffsetDateTime lastSeenAt,
             int articleCount, List<String> sources) {
     }
@@ -98,7 +99,7 @@ public class StoryQueryService {
                 limit :limit
             )
             select s.id, s.first_seen_at, s.last_seen_at, s.article_count,
-                   t.title, src.names
+                   t.title, src.codes
             from selected s
             cross join lateral (
                 select a.title
@@ -108,10 +109,11 @@ public class StoryQueryService {
                 limit 1
             ) t
             cross join lateral (
-                select string_agg(distinct x.name, '|' order by x.name) as names
-                from article a
-                join source x on x.id = a.source_id
-                where a.story_id = s.id
+                select string_agg(q.code, '|' order by q.name, q.code) as codes
+                from (select distinct x.code, x.name
+                      from article a
+                      join source x on x.id = a.source_id
+                      where a.story_id = s.id) q
             ) src
             order by {ORDER}
             """;
@@ -222,7 +224,7 @@ public class StoryQueryService {
                         rs.getObject("first_seen_at", OffsetDateTime.class),
                         rs.getObject("last_seen_at", OffsetDateTime.class),
                         rs.getInt("article_count"),
-                        splitNames(rs.getString("names"))))
+                        splitNames(rs.getString("codes"))))
                 .list();
     }
 

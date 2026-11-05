@@ -164,6 +164,13 @@ angelegt, bestehende aktualisiert und entfernte deaktiviert (nicht gelöscht).
   z.B. World und Startseite. Doppelte Artikel werden über die URL erkannt.
 - Meinungsseiten als eigene Quelle mit `section: OPINION` führen.
 - `camp` ist für dein eigenes Lager-Tag reserviert.
+- **Einordnung** pro Quelle (alles optional, Werte im Kopf von `sources.yml`):
+  `ownership` (privat, oeffentlich, staatlich, parteien), `lean` (links … rechts oder
+  keine), `lean-source` (allsides oder eigene) und `note`. Das UI zeigt bei jeder Quelle
+  das Land, ein Zeichen für die Finanzierung (◐ öffentlich, 🏛 Staat, 🗳 Parteigeld) und
+  die Ausrichtung als Punkt auf einer neutralen Skala; der Rest steht im Tooltip.
+  Für US- und GB-Quellen stammt die Ausrichtung von AllSides, sonst ist es eine eigene
+  Einschätzung. Für die Schweiz und Lateinamerika gibt es keine neutrale Bewertungsquelle.
 - Ungültige Einträge (doppelter Code, Quelle ohne Feed, URL bei zwei Quellen)
   brechen den Start mit klarer Meldung ab.
 

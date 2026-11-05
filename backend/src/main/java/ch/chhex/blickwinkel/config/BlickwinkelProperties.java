@@ -37,7 +37,9 @@ public record BlickwinkelProperties(
 
     /**
      * Ein Eintrag aus sources.yml: eine Quelle (Redaktion) mit einem oder mehreren Feeds.
-     * {@code camp} darf leer sein.
+     * {@code camp}, {@code ownership} (Standard privat), {@code lean}, {@code leanSource}
+     * (Standard eigene) und {@code note} dürfen leer sein. Gültige Werte: siehe
+     * {@code source.Ownership}, {@code source.Lean}, {@code source.LeanSource}.
      */
     public record SourceDefinition(
             String code,
@@ -46,6 +48,10 @@ public record BlickwinkelProperties(
             String language,
             String section,
             List<URI> feedUrls,
-            String camp) {
+            String camp,
+            String ownership,
+            String lean,
+            String leanSource,
+            String note) {
     }
 }
