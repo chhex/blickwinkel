@@ -31,6 +31,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import ch.chhex.blickwinkel.source.Lean;
+import ch.chhex.blickwinkel.source.LeanSource;
+import ch.chhex.blickwinkel.source.Ownership;
+import ch.chhex.blickwinkel.source.SourceCatalog;
+import ch.chhex.blickwinkel.source.SourceInfo;
 import ch.chhex.blickwinkel.source.SourceStatusService;
 import ch.chhex.blickwinkel.source.SourceStatusService.FeedStatus;
 import ch.chhex.blickwinkel.source.SourceStatusService.SourceOption;
@@ -72,6 +77,9 @@ class UiControllerTest {
     @MockitoBean
     TranslationService translations;
 
+    @MockitoBean
+    SourceCatalog catalog;
+
     private static final ArticleText LE_TEMPS = new ArticleText(3, "https://letemps.ch/c",
             "Le budget militaire augmente", "Le Conseil fédéral a décidé.", "fr");
 
@@ -79,7 +87,18 @@ class UiControllerTest {
     void beispieldaten() {
         when(stories.search(any())).thenReturn(List.of(
                 new StorySummary(505, "Bundesrat erhöht Armeebudget", T, T.plusHours(7), 4,
-                        List.of("NZZ", "SRF News", "watson"))));
+                        // watson fehlt bewusst im Katalog: Platzhalter mit Code
+                        List.of("nzz", "srf", "watson"))));
+
+        when(catalog.snapshot()).thenReturn(new SourceCatalog.Snapshot(Map.of(
+                "nzz", new SourceInfo("nzz", "NZZ", "CH", "de", "NEWS", Ownership.PRIVAT, Lean.MITTE_RECHTS,
+                        LeanSource.EIGENE, null),
+                "srf", new SourceInfo("srf", "SRF News", "CH", "de", "NEWS", Ownership.OEFFENTLICH,
+                        Lean.MITTE_LINKS, LeanSource.EIGENE, "Gebühren (Serafe)"),
+                "guardian", new SourceInfo("guardian", "The Guardian", "GB", "en", "NEWS", Ownership.PRIVAT,
+                        Lean.MITTE_LINKS, LeanSource.ALLSIDES, null),
+                "sputnik", new SourceInfo("sputnik", "Sputnik Mundo", "RU", "es", "NEWS", Ownership.STAATLICH,
+                        Lean.KEINE, LeanSource.EIGENE, "russischer Staat"))));
 
         when(stories.story(anyLong())).thenReturn(Optional.empty());
         when(stories.story(505)).thenReturn(Optional.of(new StoryDetail(505, "Bundesrat erhöht Armeebudget",
@@ -282,6 +301,30 @@ class UiControllerTest {
                 .andExpect(content().string(containsString("Swiss raise defence spending")))
                 .andExpect(content().string(not(containsString("<html"))))
                 .andExpect(content().string(not(containsString("<legend>Quelle</legend>"))));
+    }
+
+    @Test
+    void uebersichtZeigtEinordnungDerQuellen() throws Exception {
+        mvc.perform(get("/stories"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(">SRF News<")))
+                // öffentlich: Zeichen; privat: keins
+                .andExpect(content().string(containsString("aria-label=\"öffentlich finanziert\"")))
+                .andExpect(content().string(containsString("aria-label=\"Ausrichtung mitte-links\"")))
+                .andExpect(content().string(containsString(
+                        "title=\"SRF News · CH · öffentlich finanziert · Ausrichtung: mitte-links (eigene Einschätzung) · Gebühren (Serafe)\"")))
+                .andExpect(content().string(containsString("class=\"on\"")))
+                // nicht im Katalog: Code als Name, ohne Skala
+                .andExpect(content().string(containsString(">watson<")))
+                .andExpect(content().string(containsString("watson · privat · Ausrichtung: nicht eingeordnet")));
+    }
+
+    @Test
+    void storyDetailZeigtEinordnung() throws Exception {
+        mvc.perform(get("/stories/505"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(
+                        "The Guardian · GB · privat · Ausrichtung: mitte-links (AllSides)")));
     }
 
     @Test

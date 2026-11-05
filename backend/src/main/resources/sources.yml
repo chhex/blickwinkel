@@ -8,9 +8,20 @@
 #
 # section: NEWS oder OPINION  (Meinung bewusst als eigene Quelle führen)
 # camp:    dein eigenes Lager-Tag, frei wählbar, vorerst leer
-# country: ISO-Code (CH, DE, FR, ES, US, GB)
+# country: ISO-Code (CH, DE, FR, ES, US, GB, AR, ...)
 #
-# Alle Feeds geprüft am 2.11.2026 (HTTP 200, Einträge vorhanden).
+# Einordnung (alles optional, Tippfehler brechen den Start ab):
+#   ownership:   privat (Standard) | oeffentlich | staatlich | parteien
+#                oeffentlich = Gebühren/Staat, redaktionell unabhängig (SRF, BBC)
+#                staatlich   = die Regierung bestimmt die Linie
+#                parteien    = nimmt Geld von Parteien
+#   lean:        links | mitte-links | mitte | mitte-rechts | rechts | keine
+#                keine = links/rechts passt nicht (Staatsmedien, Parteigeld, Besitzerinteressen)
+#                leer  = noch nicht eingeordnet
+#   lean-source: allsides | eigene (Standard, sobald lean gesetzt ist)
+#   note:        Freitext für den Tooltip
+#
+# Feeds geprüft am 2.11.2026, neue am 5.11.2026 (HTTP 200, Einträge vorhanden).
 
 blickwinkel:
   sources:
@@ -20,6 +31,8 @@ blickwinkel:
       country: CH
       language: de
       section: NEWS
+      ownership: privat
+      lean: mitte-rechts
       feed-urls:
         - https://www.nzz.ch/recent.rss
     - code: nzz-meinung
@@ -27,6 +40,8 @@ blickwinkel:
       country: CH
       language: de
       section: OPINION
+      ownership: privat
+      lean: mitte-rechts
       feed-urls:
         - https://www.nzz.ch/meinung.rss
     - code: srf
@@ -34,6 +49,9 @@ blickwinkel:
       country: CH
       language: de
       section: NEWS
+      ownership: oeffentlich
+      lean: mitte-links
+      note: "Gebühren (Serafe), Konzession"
       feed-urls:
         - https://www.srf.ch/news/bnf/rss/1646
     - code: tagesanzeiger
@@ -41,6 +59,9 @@ blickwinkel:
       country: CH
       language: de
       section: NEWS
+      ownership: privat
+      lean: mitte-links
+      note: "TX Group"
       feed-urls:
         - https://partner-feeds.publishing.tamedia.ch/rss/tagesanzeiger/ticker
     - code: watson
@@ -48,6 +69,9 @@ blickwinkel:
       country: CH
       language: de
       section: NEWS
+      ownership: privat
+      lean: mitte-links
+      note: "CH Media"
       feed-urls:
         - https://www.watson.ch/api/2.0/rss/index.xml
     - code: infosperber
@@ -55,6 +79,9 @@ blickwinkel:
       country: CH
       language: de
       section: NEWS
+      ownership: privat
+      lean: links
+      note: "Stiftung SSUI"
       feed-urls:
         - https://www.infosperber.ch/feed/
     - code: letemps
@@ -62,9 +89,32 @@ blickwinkel:
       country: CH
       language: fr
       section: NEWS
+      ownership: privat
+      lean: mitte
+      note: "Stiftung Aventinus"
       feed-urls:
         - https://www.letemps.ch/articles.rss
-    # Weltwoche, WOZ, Nebelspalter, Republik: Feed-URL noch offen
+    - code: az
+      name: Aargauer Zeitung
+      country: CH
+      language: de
+      section: NEWS
+      ownership: privat
+      lean: mitte
+      note: "CH Media; nur Ressort Schweiz"
+      feed-urls:
+        - https://www.aargauerzeitung.ch/schweiz.rss
+    - code: baz
+      name: Basler Zeitung
+      country: CH
+      language: de
+      section: NEWS
+      ownership: privat
+      lean: mitte-rechts
+      note: "TX Group"
+      feed-urls:
+        - https://partner-feeds.publishing.tamedia.ch/rss/bazonline/ticker
+    # Weltwoche: kein öffentlicher Feed (geprüft 5.11.2026). WOZ, Nebelspalter, Republik: offen
 
     # --- Deutschland ---
     - code: spiegel
@@ -72,6 +122,8 @@ blickwinkel:
       country: DE
       language: de
       section: NEWS
+      ownership: privat
+      lean: mitte-links
       feed-urls:
         - https://www.spiegel.de/schlagzeilen/index.rss
 
@@ -81,6 +133,8 @@ blickwinkel:
       country: FR
       language: fr
       section: NEWS
+      ownership: privat
+      lean: mitte-links
       feed-urls:
         - https://www.lemonde.fr/rss/une.xml
     - code: elpais
@@ -88,6 +142,9 @@ blickwinkel:
       country: ES
       language: es
       section: NEWS
+      ownership: privat
+      lean: mitte-links
+      note: "PRISA"
       feed-urls:
         - https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada
 
@@ -97,6 +154,10 @@ blickwinkel:
       country: GB
       language: en
       section: NEWS
+      ownership: privat
+      lean: mitte-links
+      lean-source: allsides
+      note: "Scott Trust"
       feed-urls:
         - https://www.theguardian.com/world/rss
         - https://www.theguardian.com/international/rss
@@ -105,6 +166,10 @@ blickwinkel:
       country: GB
       language: en
       section: NEWS
+      ownership: oeffentlich
+      lean: mitte
+      lean-source: allsides
+      note: "Rundfunkgebühr, Royal Charter"
       feed-urls:
         - https://feeds.bbci.co.uk/news/world/rss.xml
         - https://feeds.bbci.co.uk/news/rss.xml
@@ -113,6 +178,9 @@ blickwinkel:
       country: GB
       language: en
       section: NEWS
+      ownership: privat
+      lean: mitte
+      lean-source: allsides
       feed-urls:
         - https://www.ft.com/world?format=rss
         - https://www.ft.com/rss/home
@@ -125,6 +193,10 @@ blickwinkel:
       country: US
       language: en
       section: NEWS
+      ownership: privat
+      lean: mitte
+      lean-source: allsides
+      note: "Nachrichtenteil"
       feed-urls:
         - https://feeds.content.dowjones.io/public/rss/RSSWorldNews
         - https://feeds.content.dowjones.io/public/rss/RSSUSnews
@@ -133,6 +205,9 @@ blickwinkel:
       country: US
       language: en
       section: NEWS
+      ownership: privat
+      lean: mitte-links
+      lean-source: allsides
       feed-urls:
         - https://rss.nytimes.com/services/xml/rss/nyt/World.xml
         - https://rss.nytimes.com/services/xml/rss/nyt/HomePage.xml
@@ -141,6 +216,10 @@ blickwinkel:
       country: US
       language: en
       section: NEWS
+      ownership: privat
+      lean: mitte-links
+      lean-source: allsides
+      note: "Bundesgelder 2025 gestrichen"
       feed-urls:
         - https://feeds.npr.org/1004/rss.xml
         - https://feeds.npr.org/1001/rss.xml
@@ -149,6 +228,9 @@ blickwinkel:
       country: US
       language: en
       section: NEWS
+      ownership: privat
+      lean: mitte
+      lean-source: allsides
       feed-urls:
         - https://thehill.com/policy/international/feed/
         - https://thehill.com/news/feed/
@@ -157,6 +239,9 @@ blickwinkel:
       country: US
       language: en
       section: NEWS
+      ownership: privat
+      lean: mitte-rechts
+      lean-source: allsides
       feed-urls:
         - https://www.washingtonexaminer.com/section/news/feed/
     - code: foxnews
@@ -164,6 +249,96 @@ blickwinkel:
       country: US
       language: en
       section: NEWS
+      ownership: privat
+      lean: rechts
+      lean-source: allsides
       feed-urls:
         - https://moxie.foxnews.com/google-publisher/world.xml
         - https://moxie.foxnews.com/google-publisher/latest.xml
+
+    # --- Dominikanische Republik ---
+    # Einordnung nach Einschätzung vor Ort: links/rechts ist hier oft nicht die Frage,
+    # sondern wessen Interessen ein Blatt vertritt.
+    - code: diariolibre
+      name: Diario Libre
+      country: DO
+      language: es
+      section: NEWS
+      ownership: privat
+      lean: keine
+      note: "vertritt die Interessen des Besitzers"
+      feed-urls:
+        - https://www.diariolibre.com/rss/portada.xml
+    - code: elnuevodiario
+      name: El Nuevo Diario
+      country: DO
+      language: es
+      section: NEWS
+      ownership: parteien
+      lean: keine
+      note: "nimmt Geld von verschiedenen Parteien, tendenziell käuflich"
+      feed-urls:
+        - https://elnuevodiario.com.do/feed/
+    - code: dominicantoday
+      name: Dominican Today
+      country: DO
+      language: en
+      section: NEWS
+      ownership: privat
+      lean: mitte
+      feed-urls:
+        - https://dominicantoday.com/feed/
+
+    # --- Lateinamerika ---
+    - code: infobae
+      name: Infobae
+      country: AR
+      language: es
+      section: NEWS
+      ownership: privat
+      lean: mitte-rechts
+      feed-urls:
+        - https://www.infobae.com/arc/outboundfeeds/rss/
+    - code: eltiempo
+      name: El Tiempo
+      country: CO
+      language: es
+      section: NEWS
+      ownership: privat
+      lean: mitte-rechts
+      note: "nur Ressort Mundo"
+      feed-urls:
+        - http://www.eltiempo.com/rss/mundo.xml
+    - code: lajornada
+      name: La Jornada
+      country: MX
+      language: es
+      section: NEWS
+      ownership: privat
+      lean: links
+      note: "regierungsnah, viel staatliche Werbung"
+      feed-urls:
+        - https://www.jornada.com.mx/rss/edicion.xml?v=1
+    - code: bbcmundo
+      name: BBC Mundo
+      country: GB
+      language: es
+      section: NEWS
+      ownership: oeffentlich
+      lean: mitte
+      note: "Rundfunkgebühr, Royal Charter"
+      feed-urls:
+        - https://feeds.bbci.co.uk/mundo/rss.xml
+
+    # --- Staatsmedien als markierter Kontrast ---
+    # teleSUR: Feed liefert keine Einträge (geprüft 5.11.2026), weggelassen.
+    - code: sputnik-mundo
+      name: Sputnik Mundo
+      country: RU
+      language: es
+      section: NEWS
+      ownership: staatlich
+      lean: keine
+      note: "russischer Staat"
+      feed-urls:
+        - https://mundo.sputniknews.com/export/rss2/archive/index.xml

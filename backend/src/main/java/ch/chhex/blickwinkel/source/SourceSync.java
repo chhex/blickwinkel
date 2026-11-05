@@ -30,15 +30,21 @@ public class SourceSync implements ApplicationRunner {
     private static final Logger log = LoggerFactory.getLogger(SourceSync.class);
 
     private static final String UPSERT_SOURCE = """
-            insert into source (code, name, country, language, section, camp, active)
-            values (:code, :name, :country, :language, cast(:section as source_section), :camp, true)
+            insert into source (code, name, country, language, section, camp,
+                                ownership, lean, lean_source, note, active)
+            values (:code, :name, :country, :language, cast(:section as source_section), :camp,
+                    cast(:ownership as source_ownership), cast(:lean as source_lean), :leanSource, :note, true)
             on conflict (code) do update set
-                name     = excluded.name,
-                country  = excluded.country,
-                language = excluded.language,
-                section  = excluded.section,
-                camp     = excluded.camp,
-                active   = true
+                name        = excluded.name,
+                country     = excluded.country,
+                language    = excluded.language,
+                section     = excluded.section,
+                camp        = excluded.camp,
+                ownership   = excluded.ownership,
+                lean        = excluded.lean,
+                lean_source = excluded.lean_source,
+                note        = excluded.note,
+                active      = true
             returning id
             """;
 
@@ -75,6 +81,8 @@ public class SourceSync implements ApplicationRunner {
         int feeds = 0;
         int deactivatedFeeds = 0;
         for (SourceDefinition d : definitions) {
+            Lean lean = Lean.parse(d.lean());
+            LeanSource leanSource = LeanSource.parse(d.leanSource(), lean);
             long sourceId = jdbc.sql(UPSERT_SOURCE)
                     .param("code", d.code())
                     .param("name", d.name())
@@ -82,6 +90,10 @@ public class SourceSync implements ApplicationRunner {
                     .param("language", d.language().toLowerCase(Locale.ROOT))
                     .param("section", d.section().toUpperCase(Locale.ROOT))
                     .param("camp", d.camp(), Types.VARCHAR)
+                    .param("ownership", Ownership.parse(d.ownership()).name())
+                    .param("lean", lean == null ? null : lean.name(), Types.VARCHAR)
+                    .param("leanSource", leanSource == null ? null : leanSource.name(), Types.VARCHAR)
+                    .param("note", blankToNull(d.note()), Types.VARCHAR)
                     .query(Long.class)
                     .single();
 
@@ -126,6 +138,13 @@ public class SourceSync implements ApplicationRunner {
             } else if (!codes.add(d.code())) {
                 errors.add("code doppelt: " + d.code());
             }
+            checkValue(errors, code, "ownership", d.ownership(), () -> Ownership.parse(d.ownership()));
+            checkValue(errors, code, "lean", d.lean(), () -> Lean.parse(d.lean()));
+            checkValue(errors, code, "lean-source", d.leanSource(),
+                    () -> LeanSource.parse(d.leanSource(), Lean.MITTE));
+            if (isBlank(d.lean()) && !isBlank(d.leanSource())) {
+                errors.add(code + ": lean-source ohne lean");
+            }
             if (d.feedUrls() == null || d.feedUrls().isEmpty()) {
                 errors.add(code + ": keine feed-urls");
                 continue;
@@ -139,5 +158,21 @@ public class SourceSync implements ApplicationRunner {
         if (!errors.isEmpty()) {
             throw new IllegalStateException("sources.yml ungültig: " + String.join("; ", errors));
         }
+    }
+
+    private static void checkValue(List<String> errors, String code, String field, String value, Runnable parse) {
+        try {
+            parse.run();
+        } catch (IllegalArgumentException e) {
+            errors.add(code + ": " + field + " unbekannt: " + value);
+        }
+    }
+
+    private static boolean isBlank(String s) {
+        return s == null || s.isBlank();
+    }
+
+    private static String blankToNull(String s) {
+        return isBlank(s) ? null : s.strip();
     }
 }
