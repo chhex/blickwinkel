@@ -85,7 +85,7 @@
                         <div th:if="${src.lean != null}">
                             <span th:replace="~{fragments/source :: scale(${src})}">L ○○○●○ R</span>
                         </div>
-                        <div th:unless="${#strings.isEmpty(src.ownership.icon())}">
+                        <div class="own-line" th:unless="${#strings.isEmpty(src.ownership.icon())}">
                             <span class="own" th:text="${src.ownership.icon()}">🏛</span>
                             <small th:text="${src.ownership.label()}">Staatsmedium</small>
                         </div>

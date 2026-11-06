@@ -146,8 +146,25 @@ td.col-narrow {
     line-height: 1.35;
 }
 
+/* Quelle: Umbruch zwischen Wörtern erlaubt, damit die Spalte nur so breit wird wie das
+   längste Wort («Wall Street Journal» steht dann auf drei Zeilen). Land + Sprache und die
+   Skala bleiben zusammen. */
+td.source-stack {
+    white-space: normal;
+}
+
+.source-stack strong {
+    display: block;
+    line-height: 1.2;
+}
+
 .source-stack > div {
     margin-top: 0.2rem;
+    white-space: nowrap;
+}
+
+.source-stack > div.own-line {
+    white-space: normal;
 }
 
 .source-stack .lean {
