@@ -6,14 +6,13 @@
   Quelle mit Einordnung, für Übersicht, Detail und Status.
   Erwartet: src (SourceInfo), showName (Name anzeigen), mode:
     'dots'  Übersicht:  CH  NZZ  ◐  ○○○●○          Muster über viele Quellen auf einen Blick
-    'full'  Detail:     CH  ◐  L ○○○●○ R  mitte-rechts
     'text'  Status:     CH  ◐  M-R                  Liste zum Nachschlagen
 
   Land als Kürzel, Finanzierung als Zeichen (nur wenn nicht privat), Ausrichtung als Punkt
   auf einer neutralen Skala links → rechts (bewusst ohne Parteifarben). Ohne Richtung: «–».
   Nicht eingeordnet: nichts. Alles Weitere (Herkunft, Notiz) steht im Tooltip.
 -->
-<span th:fragment="badge(src, showName, mode)" class="source" th:classappend="${mode == 'full'} ? 'full'"
+<span th:fragment="badge(src, showName, mode)" class="source"
       th:title="${src.tooltip()}">
     <span class="badge land" th:if="${src.country != null}" th:text="${src.country}">CH</span>
     <span class="source-name" th:if="${showName}" th:text="${src.name}">NZZ</span>
@@ -21,15 +20,24 @@
           th:text="${src.ownership.icon()}" th:attr="aria-label=${src.ownership.label()}">🏛</span>
     <span class="lean" th:if="${src.lean != null}" th:attr="aria-label=${'Ausrichtung ' + src.lean.label()}"
           th:with="scale=${mode != 'text' and src.leanPosition() != null}">
-        <th:block th:if="${scale}">
-            <small class="lean-end" th:if="${mode == 'full'}">L</small><span class="lean-scale" aria-hidden="true"><i
-                th:each="p : ${ {-2, -1, 0, 1, 2} }" th:classappend="${p == src.leanPosition()} ? 'on'"></i></span><small
-                class="lean-end" th:if="${mode == 'full'}">R</small>
-        </th:block>
-        <!-- Text: im Detail ausgeschrieben, im Status als Kürzel; in der Übersicht nur, wenn es keine Skala gibt («–») -->
-        <small class="lean-text" th:if="${mode != 'dots' or !scale}"
-               th:text="${mode == 'full' ? src.lean.label() : src.lean.shortLabel()}">M-R</small>
+        <span class="lean-scale" th:if="${scale}" aria-hidden="true"><i
+                th:each="p : ${ {-2, -1, 0, 1, 2} }" th:classappend="${p == src.leanPosition()} ? 'on'"></i></span>
+        <!-- Kürzel: im Status immer, in der Übersicht nur ohne Skala («–») -->
+        <small class="lean-text" th:if="${mode != 'dots' or !scale}" th:text="${src.lean.shortLabel()}">M-R</small>
     </span>
+</span>
+
+<!--
+  Ausrichtung für das Story-Detail: Skala mit L und R an den Enden, ohne Wort.
+  Bei «keine Richtung» stattdessen dieser Text, sonst stünde dort gar nichts.
+  Erwartet: src (SourceInfo) mit lean != null.
+-->
+<span th:fragment="scale(src)" class="lean"
+      th:attr="aria-label=${'Ausrichtung ' + src.lean.label()}">
+    <th:block th:if="${src.leanPosition() != null}"><small class="lean-end">L</small><span class="lean-scale"
+            aria-hidden="true"><i th:each="p : ${ {-2, -1, 0, 1, 2} }"
+            th:classappend="${p == src.leanPosition()} ? 'on'"></i></span><small class="lean-end">R</small></th:block>
+    <small class="muted" th:if="${src.leanPosition() == null}" th:text="${src.lean.label()}">keine Richtung</small>
 </span>
 
 </body>
