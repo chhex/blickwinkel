@@ -1,6 +1,7 @@
 package ch.chhex.blickwinkel.ui;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.matchesRegex;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -361,7 +362,9 @@ class UiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(">Federal Council raises army budget<")))
                 .andExpect(content().string(containsString("title=\"Original: Bundesrat erhöht Armeebudget\"")))
-                .andExpect(content().string(containsString("<option value=\"en\" selected=\"selected\">EN</option>")));
+                // Leerraum zwischen den Attributen egal: Thymeleaf übernimmt Zeilenumbrüche aus dem Template
+                .andExpect(content().string(matchesRegex(
+                        "(?s).*<option value=\"en\"\\s+selected=\"selected\">EN</option>.*")));
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<TitleRef>> refs = ArgumentCaptor.forClass(List.class);
