@@ -41,8 +41,9 @@ public class StoryQueryService {
     // --- Records für das UI ---------------------------------------------------------
 
     /** {@code sources}: Codes der beteiligten Quellen, nach Name sortiert (Anzeige über den Quellenkatalog). */
-    public record StorySummary(long id, String title, OffsetDateTime firstSeenAt, OffsetDateTime lastSeenAt,
-            int articleCount, List<String> sources) {
+    /** {@code titleArticleId}/{@code titleLanguage}: der Artikel, dessen Titel die Story trägt (zum Übersetzen). */
+    public record StorySummary(long id, String title, long titleArticleId, String titleLanguage,
+            OffsetDateTime firstSeenAt, OffsetDateTime lastSeenAt, int articleCount, List<String> sources) {
     }
 
     /**
@@ -99,10 +100,10 @@ public class StoryQueryService {
                 limit :limit
             )
             select s.id, s.first_seen_at, s.last_seen_at, s.article_count,
-                   t.title, src.codes
+                   t.title, t.title_article_id, t.title_language, src.codes
             from selected s
             cross join lateral (
-                select a.title
+                select a.title, a.id as title_article_id, trim(a.language) as title_language
                 from article a
                 where a.story_id = s.id
                 order by a.embedding <=> s.centroid, a.id
@@ -221,6 +222,8 @@ public class StoryQueryService {
                 .query((rs, n) -> new StorySummary(
                         rs.getLong("id"),
                         rs.getString("title"),
+                        rs.getLong("title_article_id"),
+                        rs.getString("title_language"),
                         rs.getObject("first_seen_at", OffsetDateTime.class),
                         rs.getObject("last_seen_at", OffsetDateTime.class),
                         rs.getInt("article_count"),

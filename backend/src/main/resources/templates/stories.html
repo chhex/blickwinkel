@@ -48,6 +48,14 @@
                         th:selected="${o.code() == sort}">Neueste zuerst</option>
             </select>
         </label>
+        <!-- Titel übersetzen: nur mit DeepL-Schlüssel; Original bleibt im Tooltip, die Suche läuft aufs Original -->
+        <label th:if="${translation.enabled}">Titel
+            <select name="titel">
+                <option value="" th:selected="${titel == null}">Original</option>
+                <option th:each="l : ${translation.targets}" th:value="${l}"
+                        th:text="${#strings.toUpperCase(l)}" th:selected="${l == titel}">DE</option>
+            </select>
+        </label>
     </form>
 
     <section id="list" th:fragment="list">
@@ -61,8 +69,12 @@
            th:text="${q != null} ? 'Keine Stories mit «' + ${q} + '» in diesem Zeitraum.' : 'Keine Stories in diesem Zeitraum.'">
             Keine Stories in diesem Zeitraum.
         </p>
+        <p th:if="${titles.error != null}" class="error-text"
+           th:text="'Nicht alle Titel übersetzt: ' + ${titles.error}">Nicht alle Titel übersetzt</p>
         <article th:each="s : ${stories}" class="story">
-            <a th:href="@{/stories/{id}(id=${s.id})}" class="story-title" th:text="${s.title}">Titel</a>
+            <a th:href="@{/stories/{id}(id=${s.id})}" class="story-title"
+               th:text="${titles.of(s.titleArticleId, s.title)}"
+               th:title="${titles.translated(s.titleArticleId)} ? ${'Original: ' + s.title}">Titel</a>
             <p class="meta"
                th:text="${s.sources.size()} + ' Quellen · ' + ${s.articleCount} + ' Artikel · ' + ${@fmt.span(s.firstSeenAt, s.lastSeenAt)}">
                 3 Quellen · 4 Artikel · 01.11. 16:33 – 23:35
