@@ -40,6 +40,9 @@ import ch.chhex.blickwinkel.source.SourceStatusService;
 import ch.chhex.blickwinkel.source.SourceStatusService.FeedStatus;
 import ch.chhex.blickwinkel.source.SourceStatusService.SourceOption;
 import ch.chhex.blickwinkel.story.StoryFilter;
+import ch.chhex.blickwinkel.translation.TitleTranslationService;
+import ch.chhex.blickwinkel.translation.TitleTranslationService.TitleRef;
+import ch.chhex.blickwinkel.translation.TitleTranslationService.TitleTranslations;
 import ch.chhex.blickwinkel.story.StoryQueryService;
 import ch.chhex.blickwinkel.story.StorySort;
 import ch.chhex.blickwinkel.story.StoryQueryService.Singleton;
@@ -80,15 +83,24 @@ class UiControllerTest {
     @MockitoBean
     SourceCatalog catalog;
 
+    @MockitoBean
+    TitleTranslationService titleTranslations;
+
     private static final ArticleText LE_TEMPS = new ArticleText(3, "https://letemps.ch/c",
             "Le budget militaire augmente", "Le Conseil fédéral a décidé.", "fr");
 
     @BeforeEach
     void beispieldaten() {
         when(stories.search(any())).thenReturn(List.of(
-                new StorySummary(505, "Bundesrat erhöht Armeebudget", T, T.plusHours(7), 4,
+                new StorySummary(505, "Bundesrat erhöht Armeebudget", 2, "de", T, T.plusHours(7), 4,
                         // watson fehlt bewusst im Katalog: Platzhalter mit Code
                         List.of("nzz", "srf", "watson"))));
+
+        when(titleTranslations.translate(any(), any())).thenReturn(TitleTranslations.NONE);
+        when(titleTranslations.translate(any(), eq("en"))).thenReturn(new TitleTranslations("en",
+                Map.of(2L, "Federal Council raises army budget"), null));
+        when(titleTranslations.translate(any(), eq("es"))).thenReturn(new TitleTranslations("es",
+                Map.of(), "Das DeepL-Kontingent für diesen Monat ist aufgebraucht."));
 
         when(catalog.snapshot()).thenReturn(new SourceCatalog.Snapshot(Map.of(
                 "nzz", new SourceInfo("nzz", "NZZ", "CH", "de", "NEWS", Ownership.PRIVAT, Lean.MITTE_RECHTS,
@@ -341,6 +353,37 @@ class UiControllerTest {
                 // Status: nur Kürzel, keine Punkte
                 .andExpect(content().string(containsString("class=\"lean-text\">M-R<")))
                 .andExpect(content().string(not(containsString("lean-scale"))));
+    }
+
+    @Test
+    void titelUebersetztMitOriginalImTooltip() throws Exception {
+        mvc.perform(get("/stories").param("titel", "en"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(">Federal Council raises army budget<")))
+                .andExpect(content().string(containsString("title=\"Original: Bundesrat erhöht Armeebudget\"")))
+                .andExpect(content().string(containsString("<option value=\"en\" selected=\"selected\">EN</option>")));
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<TitleRef>> refs = ArgumentCaptor.forClass(List.class);
+        verify(titleTranslations).translate(refs.capture(), eq("en"));
+        assertEquals(List.of(new TitleRef(2, "Bundesrat erhöht Armeebudget", "de")), refs.getValue());
+    }
+
+    @Test
+    void titelOhneWahlImOriginal() throws Exception {
+        mvc.perform(get("/stories"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(">Bundesrat erhöht Armeebudget<")))
+                .andExpect(content().string(not(containsString("Original: "))))
+                .andExpect(content().string(containsString("<option value=\"\" selected=\"selected\">Original</option>")));
+    }
+
+    @Test
+    void titelFehlerZeigtOriginalUndMeldung() throws Exception {
+        mvc.perform(get("/stories").param("titel", "es").header("HX-Request", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("Nicht alle Titel übersetzt: Das DeepL-Kontingent")))
+                .andExpect(content().string(containsString(">Bundesrat erhöht Armeebudget<")));
     }
 
     @Test

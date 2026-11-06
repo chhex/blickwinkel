@@ -94,6 +94,13 @@ Den Verbrauch des DeepL-Kontingents zeigt die Statusseite.
   Implementierung.
 - Bewertungen (z.B. Clickbait) laufen immer auf dem Original, nie auf der Übersetzung.
 
+**Titel in der Übersicht:** Das Feld «Titel» bei den Filtern zeigt alle Story-Titel in einer
+Sprache (`?titel=de`). Titel, die schon in dieser Sprache sind, bleiben unberührt; das Original
+steht im Tooltip, die Suche läuft weiter auf dem Original. Übersetzt wird gebündelt (bis 50
+Titel pro Anfrage, nach Ausgangssprache getrennt) und in `title_translation` gespeichert,
+getrennt vom Story-Detail, weil dort Titel und Teaser zusammen übersetzt werden. Schlägt der
+Anbieter fehl, bleibt der Rest im Original und über der Liste steht eine Meldung.
+
 **htmx:** Filter laden nur die Liste neu. Der Controller erkennt htmx am Header
 `HX-Request` und rendert dann nur das Thymeleaf-Fragment statt der ganzen Seite.
 Die Abfragen liegen in `StoryQueryService` und werden auch von der REST-API benutzt.

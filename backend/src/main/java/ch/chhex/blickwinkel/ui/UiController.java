@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 import ch.chhex.blickwinkel.source.SourceCatalog;
+import ch.chhex.blickwinkel.translation.TitleTranslationService;
+import ch.chhex.blickwinkel.translation.TitleTranslationService.TitleRef;
 import ch.chhex.blickwinkel.source.SourceStatusService;
 import ch.chhex.blickwinkel.story.StoryQueryService;
 import ch.chhex.blickwinkel.story.StorySort;
@@ -45,15 +47,17 @@ public class UiController {
     private final StoryQueryService stories;
     private final SourceStatusService status;
     private final SourceCatalog catalog;
+    private final TitleTranslationService titleTranslations;
     private final TranslationService translations;
     private final double threshold;
 
     public UiController(StoryQueryService stories, SourceStatusService status, SourceCatalog catalog,
-            TranslationService translations,
+            TranslationService translations, TitleTranslationService titleTranslations,
             @Value("${blickwinkel.clustering.similarity-threshold}") double threshold) {
         this.stories = stories;
         this.status = status;
         this.catalog = catalog;
+        this.titleTranslations = titleTranslations;
         this.translations = translations;
         this.threshold = threshold;
     }
@@ -76,10 +80,15 @@ public class UiController {
             @RequestParam(defaultValue = "2") int minSources,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String sort,
+            @RequestParam(required = false) String titel,
             @RequestHeader(value = HX_REQUEST, required = false) String htmx,
             Model model) {
         var p = StoryListParams.of(hours, von, bis, minSources, q, sort);
         var list = stories.search(p.toFilter(OffsetDateTime.now(ZoneOffset.UTC)));
+        // Titel in einer Sprache: nur auf Wunsch (Parameter «titel»), sonst Original
+        var titles = titleTranslations.translate(list.stream()
+                .map(s -> new TitleRef(s.titleArticleId(), s.title(), s.titleLanguage()))
+                .toList(), titel);
 
         model.addAttribute("hours", p.hours());
         model.addAttribute("von", p.von());
@@ -90,6 +99,8 @@ public class UiController {
         model.addAttribute("sorts", StorySort.values());
         model.addAttribute("limit", StoryListParams.LIMIT);
         model.addAttribute("stories", list);
+        model.addAttribute("titles", titles);
+        model.addAttribute("titel", titles.lang());
         model.addAttribute("catalog", catalog.snapshot());
         return htmx != null ? "stories :: list" : "stories";
     }
