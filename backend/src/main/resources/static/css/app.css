@@ -132,15 +132,26 @@
     font-weight: 600;
 }
 
-.source.full .lean-end {
+.lean-end {
     margin: 0 0.25rem;
     font-size: 0.7rem;
     color: var(--pico-muted-color);
 }
 
-.source.full .lean-text {
-    font-weight: 400;
-    color: var(--pico-muted-color);
+/* Story-Detail: Zeit, Quelle, Ähnlichkeit so schmal wie ihr Inhalt, der Rest gehört der Schlagzeile */
+td.col-narrow {
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: top;
+    line-height: 1.35;
+}
+
+.source-stack > div {
+    margin-top: 0.2rem;
+}
+
+.source-stack .lean {
+    margin-left: 0;
 }
 
 /* Erster Artikel einer Story */

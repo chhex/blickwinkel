@@ -256,6 +256,11 @@ class UiControllerTest {
                 .andExpect(content().string(containsString("name=\"land\" value=\"GB\"")))
                 .andExpect(content().string(containsString(">zuerst<")))
                 .andExpect(content().string(containsString("class=\"badge land\"")))
+                // Datum und Uhrzeit untereinander
+                .andExpect(content().string(containsString(">01.11.</small><br>")))
+                .andExpect(content().string(containsString(">16:33<")))
+                // SRF: Finanzierung als eigene Zeile
+                .andExpect(content().string(containsString(">öffentlich finanziert<")))
                 // ohne Filter keine Zeile «x von y»
                 .andExpect(content().string(not(containsString("von 4 Artikeln"))))
                 .andReturn().getResponse().getContentAsString();
@@ -328,9 +333,11 @@ class UiControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString(
                         "The Guardian · GB · privat · Ausrichtung: mitte-links (AllSides)")))
-                // ausführlich: Skala mit Enden und ausgeschriebenem Wort
+                // Skala mit Enden, ohne ausgeschriebenes Wort (das steht im Tooltip)
                 .andExpect(content().string(containsString("class=\"lean-end\">L<")))
-                .andExpect(content().string(containsString("class=\"lean-text\">mitte-links<")));
+                .andExpect(content().string(not(containsString(">mitte-links<"))))
+                // Finanzierung als eigene Zeile, nur wenn nicht privat
+                .andExpect(content().string(not(containsString(">privat<"))));
     }
 
     @Test

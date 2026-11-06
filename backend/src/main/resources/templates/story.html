@@ -68,22 +68,33 @@
                 </thead>
                 <tbody>
                 <tr th:each="a : ${articles}">
-                    <td class="nowrap">
-                        <small th:text="${@fmt.time(a.publishedAt)}">01.11. 16:33</small>
-                        <span th:if="${a.id == firstId}" class="badge first"
-                              title="Erster Artikel dieser Story">zuerst</span>
+                    <!-- Zeit: Datum, Uhrzeit und «zuerst» untereinander, damit die Spalte schmal bleibt -->
+                    <td class="col-narrow">
+                        <small th:text="${@fmt.day(a.publishedAt)}">01.11.</small><br>
+                        <small th:text="${@fmt.clock(a.publishedAt)}">16:33</small>
+                        <th:block th:if="${a.id == firstId}"><br><span class="badge first"
+                              title="Erster Artikel dieser Story">zuerst</span></th:block>
                     </td>
-                    <td th:with="src=${catalog.of(a.sourceCode)}">
-                        <strong th:text="${a.source}">NZZ</strong><br>
-                        <span th:replace="~{fragments/source :: badge(${src}, false, 'full')}">CH ◐ L ○○○●○ R mitte-rechts</span>
-                        <small class="muted" th:text="${a.language}">de</small>
+                    <!-- Quelle: eine Angabe pro Zeile; Einordnung, Herkunft und Notiz im Tooltip -->
+                    <td class="col-narrow source-stack" th:with="src=${catalog.of(a.sourceCode)}"
+                        th:title="${src.tooltip()}">
+                        <strong th:text="${a.source}">NZZ</strong>
                         <span th:if="${a.section == 'OPINION'}" class="badge opinion">Meinung</span>
+                        <div><span class="badge land" th:text="${src.country ?: a.country}">CH</span>
+                            <small class="muted" th:text="${a.language}">de</small></div>
+                        <div th:if="${src.lean != null}">
+                            <span th:replace="~{fragments/source :: scale(${src})}">L ○○○●○ R</span>
+                        </div>
+                        <div th:unless="${#strings.isEmpty(src.ownership.icon())}">
+                            <span class="own" th:text="${src.ownership.icon()}">🏛</span>
+                            <small th:text="${src.ownership.label()}">Staatsmedium</small>
+                        </div>
                     </td>
                     <!-- Titel, Teaser und Übersetzungs-Knöpfe: eigenes Fragment, damit htmx es austauschen kann -->
                     <td th:with="t=${a}, tr=${null}, err=${null}">
                         <div th:replace="~{article-text :: text}"></div>
                     </td>
-                    <td th:text="${@fmt.sim(a.similarity)}">0.75</td>
+                    <td class="col-narrow" th:text="${@fmt.sim(a.similarity)}">0.75</td>
                 </tr>
                 </tbody>
             </table>
